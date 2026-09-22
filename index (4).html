@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>日曆小管家 - 認識日期互動遊戲</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="game-container">
+    <header class="game-header">
+      <h1 class="title">📅 日曆小管家 (進階版)</h1>
+      <p class="subtitle">把正確的「年份、月份、日期、星期」拖進日曆裡吧！</p>
+    </header>
+
+    <!-- 即時正向回饋提示列 -->
+    <div id="feedback-banner" class="feedback-banner" aria-live="polite">請選擇卡片放入日曆中！</div>
+
+    <!-- 上半部：動態日曆表底板 -->
+    <div class="calendar-board">
+      <div class="calendar-top">
+        <div class="slot-box" data-type="year">
+          <span class="slot-label">年份</span>
+          <div class="drop-zone" id="slot-year" data-type="year">拖到這裡</div>
+        </div>
+        <div class="slot-box" data-type="month">
+          <span class="slot-label">月份</span>
+          <div class="drop-zone" id="slot-month" data-type="month">拖到這裡</div>
+        </div>
+      </div>
+
+      <div class="calendar-middle">
+        <div class="slot-box large" data-type="day">
+          <span class="slot-label">日期</span>
+          <div class="drop-zone day-zone" id="slot-day" data-type="day">拖到這裡</div>
+        </div>
+      </div>
+
+      <div class="calendar-bottom">
+        <div class="slot-box" data-type="weekday">
+          <span class="slot-label">星期</span>
+          <div class="drop-zone" id="slot-weekday" data-type="weekday">拖到這裡</div>
+        </div>
+      </div>
+
+      <!-- 動態月曆小網格底板 -->
+      <div class="mini-calendar-preview">
+        <div class="mini-cal-title" id="mini-cal-title">日曆預覽</div>
+        <div class="mini-cal-grid" id="mini-cal-grid"></div>
+      </div>
+    </div>
+
+    <!-- 下半部：待選卡片區（附干擾選項） -->
+    <div class="cards-deck-container">
+      <div class="deck-title">✨ 請拖曳或點選卡片：</div>
+      <div class="cards-deck" id="cards-deck">
+        <!-- 由 JavaScript 動態生成卡片 -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 完成時的正向獎勵彈窗 -->
+  <div id="modal-success" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-icon">🌟🎉🌟</div>
+      <h2 class="modal-title">太棒了！你完成了今天的日曆！</h2>
+      <p class="modal-desc">你看得好專注，每一步都做得非常出色！</p>
+      <button id="btn-restart" class="btn-primary">再玩一次 🔄</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
