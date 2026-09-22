@@ -37,7 +37,7 @@ body {
   touch-action: manipulation;
 }
 
-/* iPad 橫向主容器 */
+/* iPad 橫向專用主容器 */
 .game-container {
   width: 100vw;
   height: 100vh;
@@ -211,7 +211,7 @@ body {
   min-height: 28px;
 }
 
-/* 月曆上的待選字卡 */
+/* 月曆待選字卡 */
 .source-card {
   min-width: 90px;
   min-height: 44px;
@@ -250,29 +250,22 @@ body {
 .source-card.selected-tap { outline: 3px solid #ff9800; }
 .source-card.placed { opacity: 0.25; pointer-events: none; border-style: dashed; }
 
-/* 當天格子作為心情放置槽 */
+/* 當天格子呈現心情 */
 .grid-cell.today-slot {
-  border: 2.5px dashed #ff9800;
+  border: 2.5px solid #ff9800;
   background: #fff8e1;
   font-weight: bold;
   color: #d84315;
-  cursor: pointer;
   flex-direction: column;
 }
 
-.grid-cell.today-slot.drag-over {
-  background: #ffe082;
-  transform: scale(1.05);
-}
-
 .grid-cell.today-slot.mood-filled {
-  border: 2.5px solid #4caf50;
+  border: 3px solid #4caf50;
   background: #e8f5e9;
+  color: #2e7d32;
 }
 
-/* ===================================================
-   核心修正：高強度發光閃爍動畫 (Pulse Flash)
-   =================================================== */
+/* 高強度發光閃爍 (Pulse Flash) */
 .flash-focus {
   animation: pulseSlotHighlight 0.6s infinite alternate ease-in-out !important;
   opacity: 1 !important;
@@ -355,9 +348,7 @@ body {
   background: #ffffff !important;
 }
 
-.sentence-slot.filled:active {
-  transform: scale(0.95);
-}
+.sentence-slot.filled:active { transform: scale(0.95); }
 
 /* 心情互動區 (放大30%) */
 .mood-box {
@@ -385,6 +376,7 @@ body {
   width: 100%;
 }
 
+/* 點擊式心情卡片 */
 .mood-card {
   min-height: 58px;
   background: #ffffff;
@@ -397,13 +389,32 @@ body {
   font-size: 1.38rem;
   font-weight: bold;
   color: #334155;
-  cursor: grab;
-  touch-action: none;
+  cursor: pointer;
   box-shadow: 0 3px 8px rgba(0,0,0,0.06);
+  transition: all 0.25s ease;
 }
 
 .mood-card .mood-emoji { font-size: 1.8rem; }
-.mood-card:active, .mood-card.dragging { cursor: grabbing; transform: scale(1.06); }
-.mood-card.selected-tap { outline: 4px solid #ff9800; }
+.mood-card:active { transform: scale(0.95); }
+
+/* 點選後的狀態：被選中的卡片高亮放大 */
+.mood-card.selected-active {
+  border: 3.5px solid #4caf50;
+  background: #e8f5e9;
+  color: #1b5e20;
+  transform: scale(1.08);
+  box-shadow: 0 6px 16px rgba(76, 175, 80, 0.3);
+}
+
+/* 點選後的狀態：未被選中的卡片變淡灰色 */
+.mood-card.dimmed {
+  opacity: 0.22;
+  filter: grayscale(100%);
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #94a3b8;
+  cursor: pointer;
+  transform: scale(0.96);
+}
 
 .hidden { display: none !important; }
