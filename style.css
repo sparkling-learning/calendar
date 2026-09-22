@@ -8,22 +8,29 @@
 }
 
 :root {
-  /* 初階色彩提示體系 (柔和低飽和度) */
+  /* 初階色彩提示 (低飽和度柔和色，減少認知負擔) */
   --c-year-bg: #e1f5fe;
   --c-year-border: #0288d1;
+  --c-year-txt: #01579b;
+
   --c-month-bg: #e8f5e9;
   --c-month-border: #388e3c;
+  --c-month-txt: #1b5e20;
+
   --c-day-bg: #fff3e0;
   --c-day-border: #f57c00;
+  --c-day-txt: #bf360c;
+
   --c-weekday-bg: #f3e5f5;
   --c-weekday-border: #7b1fa2;
+  --c-weekday-txt: #4a148c;
 }
 
 body {
-  background-color: #e9eff5;
+  background-color: #dce7f0;
   color: #2c3e50;
-  height: 100vh;
   width: 100vw;
+  height: 100vh;
   overflow: hidden;
   display: flex;
   justify-content: center;
@@ -31,444 +38,321 @@ body {
   touch-action: manipulation;
 }
 
-/* iPad 橫向容器 */
-.app-wrapper {
+/* iPad 橫向專用主容器 */
+.game-viewport {
   width: 100vw;
   height: 100vh;
-  max-width: 1200px;
-  max-height: 800px;
+  max-width: 1180px;
+  max-height: 820px;
   background: #ffffff;
-  border-radius: 16px;
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
   display: flex;
   flex-direction: column;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
   overflow: hidden;
 }
 
-/* 頂部資訊導航 */
-.top-bar {
-  height: 64px;
+/* 頂部導航條 */
+.top-nav {
+  height: 60px;
   background: #f8fafc;
   border-bottom: 2px solid #e2e8f0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
+  padding: 0 16px;
 }
 
-.brand-zone {
+.nav-title-box {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.app-icon { font-size: 1.6rem; }
-.app-title { font-size: 1.25rem; color: #1e293b; }
+.nav-icon { font-size: 1.5rem; }
+.nav-title { font-size: 1.15rem; color: #1e293b; }
 
-.feedback-zone {
+/* 正向回饋提示列 */
+.feedback-box {
   font-size: 1.05rem;
   font-weight: bold;
   padding: 6px 18px;
   border-radius: 20px;
   background: #e2e8f0;
   color: #334155;
-  transition: all 0.25s ease;
+  transition: all 0.2s ease;
 }
 
-.feedback-zone.try-again {
+.feedback-box.try-again {
   background: #ffebee;
   color: #d32f2f;
-  border: 1px solid #ffcdd2;
+  border: 1.5px solid #ffcdd2;
 }
 
-.feedback-zone.step-correct {
+.feedback-box.step-correct {
   background: #e8f5e9;
   color: #2e7d32;
-  border: 1px solid #c8e6c9;
+  border: 1.5px solid #c8e6c9;
 }
 
-.mode-switch {
+.mode-toggle {
   display: flex;
   background: #e2e8f0;
-  border-radius: 14px;
+  border-radius: 12px;
   padding: 3px;
 }
 
-.mode-btn {
+.btn-toggle {
   border: none;
   background: transparent;
-  padding: 6px 14px;
-  border-radius: 12px;
-  font-size: 0.9rem;
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-size: 0.85rem;
   font-weight: bold;
   color: #64748b;
   cursor: pointer;
 }
 
-.mode-btn.active {
+.btn-toggle.active {
   background: #0288d1;
   color: #ffffff;
 }
 
-/* 橫向雙欄主佈局 */
-.landscape-main {
+/* 主畫面佈局 (月曆放大 佔據主體) */
+.main-stage {
   flex: 1;
-  height: calc(100% - 64px);
-  position: relative;
-}
-
-.page-view {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  padding: 16px;
-  gap: 16px;
-}
-
-.page-view.hidden { display: none !important; }
-
-/* 左右分欄配比 */
-.left-panel {
-  flex: 1.1;
-  height: 100%;
-}
-
-.right-panel {
-  flex: 1.2;
-  height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  padding: 12px 16px;
+  gap: 10px;
+  height: calc(100% - 60px);
 }
 
-/* 日曆工作展示板 */
-.calendar-display-board {
-  height: 100%;
+/* 放大月曆專用板面 */
+.calendar-stage {
+  flex: 3;
   background: #fdfefe;
   border: 3px dashed #cbd5e1;
   border-radius: 16px;
-  padding: 12px;
+  padding: 10px 14px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+}
+
+.calendar-frame {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* 月曆頂部：年、月取卡槽 */
+.cal-top-bar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 32px;
+  padding: 4px 0;
+}
+
+.cal-item-wrap {
+  display: flex;
+  align-items: center;
   gap: 8px;
 }
 
-.board-header-slots {
-  display: flex;
-  gap: 10px;
-}
-
-.slot-container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.slot-tag {
-  font-size: 0.85rem;
+.cal-guide-text {
+  font-size: 1.15rem;
   font-weight: bold;
   color: #64748b;
-  margin-bottom: 4px;
 }
 
-/* 放置目標槽 (大尺寸防誤觸) */
-.drop-target {
-  width: 100%;
-  min-height: 54px;
-  border-radius: 12px;
-  border: 2px dashed #94a3b8;
-  background: #f1f5f9;
+/* 月曆網格 (星期列與日數格) */
+.cal-grid-plate {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  flex: 1;
+  margin-top: 6px;
+}
+
+/* 星期標題與一般日期格 */
+.grid-cell {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.15rem;
+  color: #64748b;
+  min-height: 42px;
+}
+
+.grid-cell.week-header {
+  background: #f1f5f9;
   font-weight: bold;
-  color: #94a3b8;
-  transition: all 0.2s ease;
+  color: #475569;
+  min-height: 34px;
 }
 
-.drop-target.day-target {
-  min-height: 64px;
-  font-size: 1.4rem;
+/* 可拖曳的大尺寸字卡 (源自月曆) */
+.source-card {
+  min-width: 90px;
+  min-height: 48px;
+  border: 2.5px solid #94a3b8;
+  background: #ffffff;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #1e293b;
+  cursor: grab;
+  touch-action: none;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.06);
+  padding: 4px 10px;
 }
 
-/* 初階色彩模式下的放置槽淡色底塊 */
-.color-easy #slot-year { background: var(--c-year-bg); border-color: var(--c-year-border); color: #0277bd; }
-.color-easy #slot-month { background: var(--c-month-bg); border-color: var(--c-month-border); color: #2e7d32; }
-.color-easy #slot-day { background: var(--c-day-bg); border-color: var(--c-day-border); color: #e65100; }
-.color-easy #slot-weekday { background: var(--c-weekday-bg); border-color: var(--c-weekday-border); color: #6a1b9a; }
-
-.drop-target.drag-hover {
-  transform: scale(1.03);
-  filter: brightness(0.95);
+/* 星期幾字卡與日期字卡於月曆內的專屬尺寸 */
+.source-card.card-weekday {
+  min-width: unset;
+  width: 100%;
+  height: 100%;
 }
 
-.drop-target.filled {
-  border-style: solid;
-  border-width: 3px;
-  font-size: 1.3rem;
-  color: #1e293b !important;
+.source-card.card-day {
+  min-width: unset;
+  width: 100%;
+  height: 100%;
+  font-size: 1.35rem;
 }
 
-/* 點選句子同步閃亮提示 */
-.slot-flash {
-  animation: pulseSlot 1.2s infinite alternate ease-in-out;
+/* 初階版色彩模式：卡片與句子底塊完全相配 */
+.easy-mode .card-year { background: var(--c-year-bg); border-color: var(--c-year-border); color: var(--c-year-txt); }
+.easy-mode .card-month { background: var(--c-month-bg); border-color: var(--c-month-border); color: var(--c-month-txt); }
+.easy-mode .card-day { background: var(--c-day-bg); border-color: var(--c-day-border); color: var(--c-day-txt); }
+.easy-mode .card-weekday { background: var(--c-weekday-bg); border-color: var(--c-weekday-border); color: var(--c-weekday-txt); }
+
+/* 卡片拖曳與點擊狀態 */
+.source-card:active, .source-card.dragging {
+  cursor: grabbing;
+  transform: scale(1.08);
+  opacity: 0.9;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.18);
+}
+
+.source-card.selected-tap {
+  outline: 4px solid #ff9800;
+}
+
+.source-card.placed {
+  opacity: 0.25;
+  cursor: default;
+  pointer-events: none;
+  border-style: dashed;
+}
+
+/* 朗讀時月曆位置同步閃亮 (Pulse Flash) */
+.flash-focus {
+  animation: pulseGrid 1.2s infinite alternate ease-in-out;
   box-shadow: 0 0 16px #ff9800 !important;
   border-color: #ff9800 !important;
 }
 
-@keyframes pulseSlot {
+@keyframes pulseGrid {
   0% { transform: scale(1); }
-  100% { transform: scale(1.05); }
+  100% { transform: scale(1.08); }
 }
 
-/* 迷你日曆底板 */
-.mini-month-plate {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 6px;
-}
-
-.plate-title {
-  font-size: 0.8rem;
-  font-weight: bold;
-  text-align: center;
-  color: #64748b;
-  margin-bottom: 4px;
-}
-
-.plate-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 2px;
-  text-align: center;
-  font-size: 0.72rem;
-}
-
-.mini-cell {
-  padding: 3px 0;
-  border-radius: 4px;
-  color: #94a3b8;
-}
-
-.mini-cell.today-marked {
-  background: #ff7043;
-  color: #ffffff;
-  font-weight: bold;
-}
-
-/* 右側操作卡片區 */
-.cards-source-area {
-  flex: 1;
-  background: #f8fafc;
-  border: 2px solid #e2e8f0;
+/* 下方句子填空區域 */
+.sentence-stage {
+  flex: 1.2;
+  background: #fffde7;
+  border: 2px solid #fff59d;
   border-radius: 16px;
-  padding: 12px;
+  padding: 10px 14px;
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
-.source-title {
-  font-size: 0.9rem;
+.sentence-card {
+  width: 100%;
+  text-align: center;
+}
+
+.sentence-instruction {
+  font-size: 0.95rem;
   font-weight: bold;
-  color: #475569;
+  color: #f57f17;
   margin-bottom: 8px;
 }
 
-.cards-canvas {
-  flex: 1;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-  align-content: center;
-}
-
-/* 大尺寸待選卡片 */
-.choice-card {
-  min-height: 58px;
-  border-radius: 14px;
-  border: 2px solid #94a3b8;
-  background: #ffffff;
+.sentence-row {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #1e293b;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.04);
-  cursor: grab;
-  touch-action: none;
-}
-
-/* 初階色彩模式下卡片對應色 */
-.color-easy .card-year { background: var(--c-year-bg); border-color: var(--c-year-border); color: #01579b; }
-.color-easy .card-month { background: var(--c-month-bg); border-color: var(--c-month-border); color: #1b5e20; }
-.color-easy .card-day { background: var(--c-day-bg); border-color: var(--c-day-border); color: #bf360c; }
-.color-easy .card-weekday { background: var(--c-weekday-bg); border-color: var(--c-weekday-border); color: #4a148c; }
-
-.choice-card:active, .choice-card.dragging {
-  cursor: grabbing;
-  transform: scale(1.06);
-  opacity: 0.9;
-  box-shadow: 0 8px 18px rgba(0,0,0,0.15);
-}
-
-.choice-card.selected-tap {
-  outline: 3px solid #ff9800;
-}
-
-.choice-card.vanished {
-  display: none;
-}
-
-/* 朗讀句子區域 */
-.sentence-panel {
-  background: #fffde7;
-  border: 2px solid #fff59d;
-  border-radius: 14px;
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
-.panel-guide {
-  font-size: 0.85rem;
-  font-weight: bold;
-  color: #f57f17;
-}
-
-.sentence-display {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  font-size: 1.2rem;
-  font-weight: bold;
-}
-
-.read-chip {
-  padding: 4px 10px;
-  border-radius: 8px;
-  border: 2px solid #fbc02d;
-  background: #ffffff;
-  font-size: 1.15rem;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.read-chip:active { transform: scale(0.95); }
-
-.action-btn-next {
-  background: #ff9800;
-  color: white;
-  border: none;
-  font-size: 1.05rem;
-  font-weight: bold;
-  padding: 8px 24px;
-  border-radius: 20px;
-  cursor: pointer;
-  box-shadow: 0 4px 10px rgba(255, 152, 0, 0.3);
-}
-
-/* 第二頁大型月曆心情板 */
-.mood-board-layout {
-  justify-content: flex-start;
-  gap: 12px;
-}
-
-.plate-title.large {
-  font-size: 1.1rem;
-}
-
-.mood-calendar-canvas {
-  flex: 1;
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 6px;
-  align-content: start;
-}
-
-.cal-slot-cell {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  min-height: 48px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.85rem;
-  color: #64748b;
-}
-
-.cal-slot-cell.header {
-  min-height: 28px;
-  font-weight: bold;
-  background: #f1f5f9;
-}
-
-/* 當天的心情放置目標大格 */
-.cal-slot-cell.today-target-slot {
-  border: 2px dashed #ff9800;
-  background: #fff8e1;
-  color: #e65100;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.cal-slot-cell.today-target-slot.drag-hover {
-  background: #ffe082;
-  transform: scale(1.05);
-}
-
-.cal-slot-cell.today-target-slot.filled-mood {
-  border: 2px solid #4caf50;
-  background: #e8f5e9;
-  font-size: 1.8rem;
-}
-
-/* 心情卡片展示網格 (初階 4 個 / 進階 8 個) */
-.moods-canvas {
-  flex: 1;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
   gap: 10px;
-  align-content: center;
+  flex-wrap: wrap;
 }
 
-.mood-card-btn {
-  min-height: 60px;
+.sentence-prefix {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #37474f;
+}
+
+/* 句子中的放置目標槽 */
+.sentence-slot {
+  min-width: 110px;
+  min-height: 54px;
+  border: 2.5px dashed #94a3b8;
   background: #ffffff;
-  border: 2px solid #ffcc80;
-  border-radius: 14px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  font-size: 1.1rem;
+  font-size: 1.3rem;
   font-weight: bold;
-  color: #334155;
-  cursor: grab;
-  touch-action: none;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0 8px;
 }
 
-.mood-card-btn .emoji-icon {
-  font-size: 1.8rem;
-}
+/* 初階色彩模式下：句子底塊色彩 */
+.easy-mode #target-year { background: var(--c-year-bg); border-color: var(--c-year-border); }
+.easy-mode #target-month { background: var(--c-month-bg); border-color: var(--c-month-border); }
+.easy-mode #target-day { background: var(--c-day-bg); border-color: var(--c-day-border); }
+.easy-mode #target-weekday { background: var(--c-weekday-bg); border-color: var(--c-weekday-border); }
 
-.mood-card-btn:active, .mood-card-btn.dragging {
-  cursor: grabbing;
+.sentence-slot.drag-hover {
   transform: scale(1.05);
+  border-style: solid;
+}
+
+.sentence-slot.filled {
+  border-style: solid;
+  border-width: 3px;
+  color: #1e293b !important;
+  background: #ffffff !important;
+}
+
+/* 填滿後可點選朗讀的按鈕樣式 */
+.sentence-slot.filled.clickable-read {
+  cursor: pointer;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.06);
+}
+
+.sentence-slot.filled.clickable-read:active {
+  transform: scale(0.96);
 }
 
 /* 慶祝彈窗 */
-.celebrate-overlay {
+.modal-backdrop {
   position: fixed;
   inset: 0;
   background: rgba(15, 23, 42, 0.6);
@@ -478,30 +362,34 @@ body {
   z-index: 999;
 }
 
-.celebrate-card {
+.modal-dialog {
   width: 90%;
   max-width: 440px;
   background: #ffffff;
   border-radius: 24px;
   padding: 28px 20px;
   text-align: center;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
 }
 
-.celebrate-badge { font-size: 3rem; margin-bottom: 8px; }
-.celebrate-title { font-size: 1.4rem; color: #2e7d32; margin-bottom: 8px; }
-.celebrate-text { font-size: 1.05rem; color: #475569; margin-bottom: 24px; }
+.badge-icon { font-size: 3.2rem; margin-bottom: 8px; }
+.badge-title { font-size: 1.45rem; color: #2e7d32; margin-bottom: 8px; }
+.badge-desc { font-size: 1.05rem; color: #475569; margin-bottom: 24px; }
 
-.btn-restart-action {
+.btn-action-primary {
   background: #22c55e;
   color: white;
   border: none;
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   font-weight: bold;
   padding: 12px 36px;
   border-radius: 30px;
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+}
+
+.btn-action-primary:active {
+  transform: scale(0.96);
 }
 
 .hidden { display: none !important; }
