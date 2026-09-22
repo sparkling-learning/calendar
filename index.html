@@ -3,89 +3,80 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>認識月曆：日曆小管家</title>
+  <title>認識月曆與心情 - 日曆小管家</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="game-viewport">
-    <!-- 頂部資訊列與正向提示 -->
-    <header class="top-nav">
-      <div class="nav-title-box">
-        <span class="nav-icon">📅</span>
-        <h1 class="nav-title">認識月曆：看月曆讀句子</h1>
+  <div class="game-container">
+    <!-- 頂部導航列 -->
+    <header class="top-bar">
+      <div class="header-title-wrap">
+        <span class="header-icon">📅</span>
+        <h1 class="header-title">認識月曆：看月曆讀句子與心情</h1>
       </div>
-      <div id="feedback-banner" class="feedback-box" aria-live="polite">
-        請在月曆中找出正確的卡片，拉到下方句子裡！
+      <div id="feedback-banner" class="feedback-banner" aria-live="polite">
+        請在月曆中找出正確卡片，拉到句子裡！
       </div>
-      <div class="mode-toggle">
-        <button id="btn-mode-easy" class="btn-toggle active">初階版（顏色提示）</button>
-        <button id="btn-mode-hard" class="btn-toggle">進階版（無提示）</button>
+      <div class="mode-switch-wrap">
+        <button id="btn-mode-easy" class="btn-mode active">初階版</button>
+        <button id="btn-mode-hard" class="btn-mode">進階版</button>
       </div>
     </header>
 
-    <!-- 主遊戲畫面 (iPad 橫向專用上下分層) -->
-    <main class="main-stage">
-      <!-- 放大版：主要月曆板面 (直接在月曆中取卡) -->
-      <section class="calendar-stage">
-        <div class="calendar-frame">
+    <!-- 主遊戲舞台 -->
+    <main class="main-content">
+      <!-- 上半部：放大版真實月曆 -->
+      <section class="calendar-section">
+        <div class="calendar-plate">
           <!-- 月曆頂部：年份與月份 -->
-          <div class="cal-top-bar">
-            <div class="cal-item-wrap">
-              <span class="cal-guide-text">年份：</span>
-              <div class="source-card card-year" id="card-year" data-type="year">
-                <!-- JS 動態填入年份 -->
-              </div>
+          <div class="cal-top-row">
+            <div class="cal-slot-item">
+              <span class="slot-label-text">年份：</span>
+              <div class="source-card card-year" id="card-year" data-type="year"></div>
             </div>
-            <div class="cal-item-wrap">
-              <span class="cal-guide-text">月份：</span>
-              <div class="source-card card-month" id="card-month" data-type="month">
-                <!-- JS 動態填入月份 -->
-              </div>
+            <div class="cal-slot-item">
+              <span class="slot-label-text">月份：</span>
+              <div class="source-card card-month" id="card-month" data-type="month"></div>
             </div>
           </div>
 
-          <!-- 月曆本體網格：星期列 + 日期格 -->
-          <div class="cal-grid-plate" id="cal-grid-plate">
-            <!-- 由 JS 動態生成星期列與日期網格 -->
-          </div>
+          <!-- 月曆網格：星期標題與日期格子 -->
+          <div class="cal-grid" id="cal-grid"></div>
         </div>
       </section>
 
-      <!-- 下方目標區：完整句子填空 -->
-      <section class="sentence-stage">
-        <div class="sentence-card">
-          <div class="sentence-instruction">🗣️ 請把月曆上的字卡拖進句子空格裡，完成後一起朗讀：</div>
+      <!-- 下半部：句子與心情引導區 -->
+      <section class="bottom-section">
+        <!-- 句子填空列 -->
+        <div class="sentence-box">
+          <div class="sentence-guide" id="sentence-guide-txt">
+            🗣️ 請把月曆上的字卡拖進句子空格裡，完成後一起朗讀：
+          </div>
           <div class="sentence-row">
             <span class="sentence-prefix">今天是</span>
-            
-            <div class="sentence-slot slot-year" id="target-year" data-type="year">
-              <span class="slot-placeholder">____年</span>
-            </div>
-
-            <div class="sentence-slot slot-month" id="target-month" data-type="month">
-              <span class="slot-placeholder">____月</span>
-            </div>
-
-            <div class="sentence-slot slot-day" id="target-day" data-type="day">
-              <span class="slot-placeholder">____日</span>
-            </div>
-
-            <div class="sentence-slot slot-weekday" id="target-weekday" data-type="weekday">
-              <span class="slot-placeholder">星期____</span>
-            </div>
+            <div class="sentence-slot slot-year" id="target-year" data-type="year">____年</div>
+            <div class="sentence-slot slot-month" id="target-month" data-type="month">____月</div>
+            <div class="sentence-slot slot-day" id="target-day" data-type="day">____日</div>
+            <div class="sentence-slot slot-weekday" id="target-weekday" data-type="weekday">星期____</div>
           </div>
+        </div>
+
+        <!-- 心情互動區 (完成句子後顯示) -->
+        <div class="mood-box hidden" id="mood-section">
+          <div class="mood-question">💖 今天的心情怎麼樣？請把情緒卡片拉到當天的月曆格子中：</div>
+          <div class="mood-deck" id="mood-deck"></div>
         </div>
       </section>
     </main>
   </div>
 
   <!-- 正向激勵全關完成彈窗 -->
-  <div id="modal-celebrate" class="modal-backdrop hidden">
-    <div class="modal-dialog">
-      <div class="badge-icon">🌟 🎉 🌟</div>
-      <h2 class="badge-title">太棒了！你完成了今天的日曆！</h2>
-      <p class="badge-desc" id="celebrate-text">你看得好專注，學會了自己閱讀月曆！</p>
-      <button id="btn-restart" class="btn-action-primary">再玩一次 🔄</button>
+  <div id="modal-celebrate" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-badge">🌟 🎉 🌟</div>
+      <h2 class="modal-title">太棒了！你完成了今天的日曆！</h2>
+      <p class="modal-desc" id="celebrate-text">你看得好專注，學會了自己閱讀月曆並記錄心情！</p>
+      <button id="btn-restart" class="btn-restart">再玩一次 🔄</button>
     </div>
   </div>
 
