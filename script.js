@@ -1,11 +1,11 @@
 /**
  * 認識月曆與心情 - SEN 幼兒互動遊戲
- * 特色：直觀閱讀實體月曆、保留完成畫面供師生分享（無覆蓋彈窗）、句子放大25%、心情放大30%、重啟邏輯完整健全
+ * 修正重點：點按句子中「年、月、日、星期」時，月曆中對應卡片/格子均能精準發光閃亮 (Pulse Flash)
  */
 
 const WEEKDAYS = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
 
-// 當天真實系統時間
+// 取得系統當天日期
 function getTodayInfo() {
   const now = new Date();
   return {
@@ -40,7 +40,7 @@ const btnRestart = document.getElementById('btn-restart');
 const btnModeEasy = document.getElementById('btn-mode-easy');
 const btnModeHard = document.getElementById('btn-mode-hard');
 
-// 正向教育回饋提示列
+// 正向教育回饋橫幅
 function notifyFeedback(text, type = 'normal') {
   feedbackBanner.textContent = text;
   feedbackBanner.className = 'feedback-banner';
@@ -48,26 +48,29 @@ function notifyFeedback(text, type = 'normal') {
   if (type === 'success') feedbackBanner.classList.add('step-correct');
 }
 
-// 建立放大版月曆
+// 建立月曆
 function renderCalendarPlate() {
   cardYear.textContent = `${today.year}年`;
   cardMonth.textContent = `${today.month}月`;
-  cardYear.classList.remove('placed', 'flash-focus', 'selected-tap');
-  cardMonth.classList.remove('placed', 'flash-focus', 'selected-tap');
+  cardYear.className = 'source-card card-year';
+  cardMonth.className = 'source-card card-month';
 
   bindUniversalDrag(cardYear, handleDateMatch);
   bindUniversalDrag(cardMonth, handleDateMatch);
 
   calGrid.innerHTML = '';
 
-  // 星期標題
+  // 星期列（保留 card-weekday 作為定位目標）
   WEEKDAYS.forEach((w, idx) => {
-    if (idx === today.dayIdx && !state.isDateStepFinished) {
+    if (idx === today.dayIdx) {
       const wCard = document.createElement('div');
       wCard.className = 'source-card card-weekday';
       wCard.id = 'card-weekday';
       wCard.setAttribute('data-type', 'weekday');
       wCard.textContent = w;
+      if (state.dateMatched.weekday) {
+        wCard.classList.add('placed');
+      }
       bindUniversalDrag(wCard, handleDateMatch);
       calGrid.appendChild(wCard);
     } else {
@@ -87,22 +90,27 @@ function renderCalendarPlate() {
     calGrid.appendChild(blank);
   }
 
+  // 日期格
   for (let d = 1; d <= daysInMonth; d++) {
     if (d === today.day) {
       if (!state.isDateStepFinished) {
-        // 第一階段：當天作為「日期可拖曳卡」
+        // 第一階段：可拖曳日期卡
         const dayCard = document.createElement('div');
         dayCard.className = 'source-card card-day';
         dayCard.id = 'card-day';
         dayCard.setAttribute('data-type', 'day');
         dayCard.textContent = `${d}日`;
+        if (state.dateMatched.day) {
+          dayCard.classList.add('placed');
+        }
         bindUniversalDrag(dayCard, handleDateMatch);
         calGrid.appendChild(dayCard);
       } else {
-        // 第二階段：當天轉為「心情放置槽」
+        // 第二階段：當天轉為心情放置槽
         const targetCell = document.createElement('div');
         targetCell.className = 'grid-cell today-slot';
         targetCell.id = 'today-mood-dropzone';
+        targetCell.setAttribute('data-day', d);
         if (state.selectedMood) {
           targetCell.classList.add('mood-filled');
           targetCell.innerHTML = `<span>${d}日</span><span style="font-size:1.8rem">${state.selectedMood.emoji}</span>`;
@@ -175,15 +183,17 @@ function bindUniversalDrag(element, onDropCallback) {
   };
 }
 
-// 監聽第一階段句子空格
+// 監聽句子填空空格點選
 function setupSentenceSlots() {
   document.querySelectorAll('.sentence-slot').forEach(slot => {
     slot.onclick = () => {
-      // 若已填滿，點擊觸發月曆對應位置閃亮
+      const slotType = slot.getAttribute('data-type');
+      // 無論是否已填滿，點擊均觸發月曆同步發光提示！
       if (slot.classList.contains('filled')) {
-        flashCalendarSource(slot.getAttribute('data-type'));
+        flashCalendarSource(slotType);
         return;
       }
+
       if (state.selectedCardId) {
         const card = document.getElementById(state.selectedCardId);
         if (card && card.classList.contains('source-card')) {
@@ -208,9 +218,10 @@ function handleDateMatch(card, slot) {
     state.selectedCardId = null;
 
     notifyFeedback(`好棒的觀察！成功把「${card.textContent}」放進句子裡！`, 'success');
+    // 配對成功時立即閃爍一次以建立位置聯結
+    flashCalendarSource(cardType);
     checkDateStepComplete();
   } else {
-    // 嚴格落實正向教育指定鼓勵語句
     notifyFeedback('欣賞你努力、再試一次', 'try-again');
     if (state.selectedCardId) {
       card.classList.remove('selected-tap');
@@ -219,23 +230,45 @@ function handleDateMatch(card, slot) {
   }
 }
 
-// 朗讀點擊時月曆同步閃亮
+// ===================================================
+// 核心修正：年、月、日、星期 全部精準同步發光 (Flash Sync)
+// ===================================================
 function flashCalendarSource(type) {
-  const map = { year: 'card-year', month: 'card-month', day: 'card-day', weekday: 'card-weekday' };
-  const target = document.getElementById(map[type]);
-  if (target) {
-    document.querySelectorAll('.source-card').forEach(c => c.classList.remove('flash-focus'));
-    target.classList.add('flash-focus');
-    setTimeout(() => target.classList.remove('flash-focus'), 1600);
+  let targetEl = null;
+
+  if (type === 'year') {
+    targetEl = document.getElementById('card-year');
+  } else if (type === 'month') {
+    targetEl = document.getElementById('card-month');
+  } else if (type === 'day') {
+    // 依當前階段抓取 card-day 或 today-mood-dropzone
+    targetEl = document.getElementById('card-day') || document.getElementById('today-mood-dropzone');
+  } else if (type === 'weekday') {
+    targetEl = document.getElementById('card-weekday');
+  }
+
+  if (targetEl) {
+    // 清除其他正在閃爍的項目
+    document.querySelectorAll('.source-card, .grid-cell').forEach(el => {
+      el.classList.remove('flash-focus');
+    });
+
+    // 加入高亮發光動畫
+    targetEl.classList.add('flash-focus');
+
+    // 1.8 秒後平滑恢復
+    setTimeout(() => {
+      targetEl.classList.remove('flash-focus');
+    }, 1800);
   }
 }
 
-// 句子完成 -> 開啟心情互動
+// 第一階段完成 -> 進入心情階段
 function checkDateStepComplete() {
   const isAll = Object.values(state.dateMatched).every(Boolean);
   if (isAll) {
     state.isDateStepFinished = true;
-    document.getElementById('sentence-guide-txt').textContent = '🗣️ 太棒了！請跟著讀一讀句子，點擊詞彙可觀察月曆哪裡在發光：';
+    document.getElementById('sentence-guide-txt').textContent = '🗣️ 太棒了！請讀一讀句子，點擊「年、月、日、星期」觀察月曆哪裡在發光：';
     notifyFeedback('太棒了！句子填好囉！現在請看看今天的心情！', 'success');
 
     moodSection.classList.remove('hidden');
@@ -244,7 +277,7 @@ function checkDateStepComplete() {
   }
 }
 
-// 生成心情情緒卡片 (放大30%)
+// 產生心情卡片
 function renderMoodDeck() {
   moodDeck.innerHTML = '';
 
@@ -291,22 +324,19 @@ function setupMoodDropZone(dropZone) {
   dropZone.ondragover = (e) => e.preventDefault();
 }
 
-// 心情放入判定 (保留畫面，不彈出讚賞視窗)
+// 心情放入判定 (保留畫面供分享)
 function handleMoodMatch(card, dropZone) {
   if (dropZone.id === 'today-mood-dropzone') {
     const emoji = card.getAttribute('data-emoji');
     const label = card.getAttribute('data-label');
     state.selectedMood = { emoji, label };
 
-    // 更新月曆當天格子
     dropZone.innerHTML = `<span>${today.day}日</span><span style="font-size:1.8rem">${emoji}</span>`;
     dropZone.classList.add('mood-filled');
 
-    // 更新下方引導提示，保留畫面讓幼兒分享原因
     moodPromptTitle.textContent = `💖 今天的心情是「${label} ${emoji}」！請小朋友和大家分享一下原因吧：`;
     notifyFeedback(`太棒了！今天的心情是「${label}」！你做得非常好！`, 'success');
 
-    // 移除未選取的其他卡片或標註當前選中卡片
     document.querySelectorAll('.mood-card').forEach(c => {
       if (c.id !== card.id) {
         c.style.opacity = '0.35';
@@ -320,7 +350,7 @@ function handleMoodMatch(card, dropZone) {
   }
 }
 
-// 完全重啟遊戲 (徹底重設所有狀態與 DOM)
+// 健全重啟遊戲
 function resetGameFull() {
   today = getTodayInfo();
   state = {
@@ -330,7 +360,6 @@ function resetGameFull() {
     selectedMood: null
   };
 
-  // 重設句子文字與樣式
   document.getElementById('target-year').textContent = '____年';
   document.getElementById('target-month').textContent = '____月';
   document.getElementById('target-day').textContent = '____日';
@@ -340,22 +369,19 @@ function resetGameFull() {
     s.classList.remove('filled');
   });
 
-  // 重設引導語與隱藏心情區
-  document.getElementById('sentence-guide-txt').textContent = '🗣️ 請把月曆上的字卡拖進句子空格裡，完成後一起朗讀：';
+  document.getElementById('sentence-guide-txt').textContent = '🗣️ 請把月曆上的字卡拖進句子空格裡，完成後點擊字詞觀察月曆發光：';
   moodPromptTitle.textContent = '💖 今天的心情怎麼樣？請把情緒卡片拉到當天的月曆格子中：';
   moodSection.classList.add('hidden');
   moodDeck.innerHTML = '';
 
   notifyFeedback('請在月曆中找出正確卡片，拉到句子裡！');
 
-  // 切換模式樣式
   if (currentMode === 'easy') {
     container.classList.add('easy-mode');
   } else {
     container.classList.remove('easy-mode');
   }
 
-  // 重繪月曆板面
   renderCalendarPlate();
   setupSentenceSlots();
 }
@@ -375,7 +401,7 @@ btnModeHard.onclick = () => {
   resetGameFull();
 };
 
-// 頂部常駐「再玩一次」事件綁定
+// 頂部常駐按鈕
 btnRestart.onclick = resetGameFull;
 
 // 程式開局啟動
