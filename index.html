@@ -12,7 +12,7 @@
     <header class="top-bar">
       <div class="header-title-wrap">
         <span class="header-icon">📅</span>
-        <h1 class="header-title">認識月曆</h1>
+        <h1 class="header-title">認識月曆：看月曆讀句子與心情</h1>
       </div>
       <div id="feedback-banner" class="feedback-banner" aria-live="polite">
         請在月曆中找出正確卡片，拉到句子裡！
@@ -46,12 +46,12 @@
         </div>
       </section>
 
-      <!-- 下半部：句子 (放大25%) 與 心情 (放大30%) -->
+      <!-- 下半部：句子與心情互動區 -->
       <section class="bottom-section">
         <!-- 句子填空列 (放大25%) -->
         <div class="sentence-box">
           <div class="sentence-guide" id="sentence-guide-txt">
-            🗣️ 請把月曆上的字卡拖進句子空格裡，完成後點擊字詞觀察月曆的發光位置：
+            🗣️ 請把月曆上的字卡拖進句子空格裡，完成後點擊字詞觀察月曆發光的位置：
           </div>
           <div class="sentence-row">
             <span class="sentence-prefix">今天是</span>
@@ -62,9 +62,9 @@
           </div>
         </div>
 
-        <!-- 心情互動區 (放大30%，保留畫面供分享) -->
+        <!-- 心情互動區 (點擊即選取，放大30%) -->
         <div class="mood-box hidden" id="mood-section">
-          <div class="mood-question" id="mood-prompt-title">💖 今天的心情怎麼樣？請把情緒卡片拉到當天的月曆格子中：</div>
+          <div class="mood-question" id="mood-prompt-title">💖 今天的心情怎麼樣？請點選下方的心情卡片：</div>
           <div class="mood-deck" id="mood-deck"></div>
         </div>
       </section>
