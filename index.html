@@ -3,103 +3,121 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>認識今天與今天心情 - 日曆小管家</title>
+  <title>日曆小管家 - 認識今天與心情</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="game-container">
-    <!-- 頂部導航與難度控制 -->
-    <header class="game-header">
-      <h1 class="title" id="page-title">📅 認識今天：日曆小管家</h1>
-      <div class="header-controls">
-        <div class="difficulty-toggle">
+  <div class="app-wrapper">
+    <!-- 頂部資訊條 -->
+    <header class="top-bar">
+      <div class="brand-zone">
+        <span class="app-icon">📅</span>
+        <h1 class="app-title" id="view-title">認識今天：日曆小管家</h1>
+      </div>
+      <div class="feedback-zone" id="feedback-banner" aria-live="polite">
+        請把卡片放進日曆裡！
+      </div>
+      <div class="controls-zone">
+        <div class="mode-switch">
           <button id="btn-mode-easy" class="mode-btn active">初階版</button>
           <button id="btn-mode-hard" class="mode-btn">進階版</button>
         </div>
       </div>
-      <p class="subtitle" id="page-subtitle">把正確的「年份、月份、日期、星期」放進日曆裡吧！</p>
     </header>
 
-    <!-- 正向回饋提示列 -->
-    <div id="feedback-banner" class="feedback-banner" aria-live="polite">請選擇卡片放入日曆中！</div>
+    <!-- ===== 主互動區（iPad 橫向左右分欄） ===== -->
+    <main class="landscape-main">
 
-    <!-- ===== 第一頁：認識日期與朗讀 ===== -->
-    <section id="page-date" class="page-section">
-      <div class="calendar-board">
-        <div class="calendar-top">
-          <div class="slot-box" id="box-year">
-            <span class="slot-label">年份</span>
-            <div class="drop-zone" id="slot-year" data-type="year">拖到這裡</div>
+      <!-- 第一頁：認識日期 -->
+      <div id="page-date" class="page-view active">
+        <!-- 左側：日曆工作板 -->
+        <section class="left-panel">
+          <div class="calendar-display-board">
+            <div class="board-header-slots">
+              <div class="slot-container" id="container-year">
+                <span class="slot-tag">年份</span>
+                <div class="drop-target slot-year" id="slot-year" data-type="year">拖到這裡</div>
+              </div>
+              <div class="slot-container" id="container-month">
+                <span class="slot-tag">月份</span>
+                <div class="drop-target slot-month" id="slot-month" data-type="month">拖到這裡</div>
+              </div>
+            </div>
+
+            <div class="board-center-slot">
+              <div class="slot-container full-width" id="container-day">
+                <span class="slot-tag">日期</span>
+                <div class="drop-target slot-day" id="slot-day" data-type="day">拖到這裡</div>
+              </div>
+            </div>
+
+            <div class="board-footer-slot">
+              <div class="slot-container full-width" id="container-weekday">
+                <span class="slot-tag">星期</span>
+                <div class="drop-target slot-weekday" id="slot-weekday" data-type="weekday">拖到這裡</div>
+              </div>
+            </div>
+
+            <!-- 月曆底板預覽 -->
+            <div class="mini-month-plate">
+              <div class="plate-title" id="p1-month-title">當月日曆底板</div>
+              <div class="plate-grid" id="p1-month-grid"></div>
+            </div>
           </div>
-          <div class="slot-box" id="box-month">
-            <span class="slot-label">月份</span>
-            <div class="drop-zone" id="slot-month" data-type="month">拖到這裡</div>
+        </section>
+
+        <!-- 右側：操作卡片區與朗讀區 -->
+        <section class="right-panel">
+          <!-- 朗讀面板 (全配對後浮現) -->
+          <div id="sentence-read-panel" class="sentence-panel hidden">
+            <div class="panel-guide">🗣️ 點擊字詞一起朗讀，觀察日曆哪裡在閃亮：</div>
+            <div class="sentence-display">
+              <span class="txt-fixed">今天是</span>
+              <button class="read-chip color-year" data-target="year" id="lbl-year">____年</button>
+              <button class="read-chip color-month" data-target="month" id="lbl-month">____月</button>
+              <button class="read-chip color-day" data-target="day" id="lbl-day">____日</button>
+              <button class="read-chip color-weekday" data-target="weekday" id="lbl-weekday">星期____</button>
+            </div>
+            <button id="btn-next-page" class="action-btn-next">前往填寫今天心情 ➡️</button>
           </div>
-        </div>
 
-        <div class="calendar-middle">
-          <div class="slot-box large" id="box-day">
-            <span class="slot-label">日期</span>
-            <div class="drop-zone day-zone" id="slot-day" data-type="day">拖到這裡</div>
+          <!-- 待選卡片區 -->
+          <div class="cards-source-area" id="date-cards-wrapper">
+            <div class="source-title">✨ 請拖曳或點選卡片放入左邊空格：</div>
+            <div class="cards-canvas" id="date-cards-deck"></div>
           </div>
-        </div>
+        </section>
+      </div>
 
-        <div class="calendar-bottom">
-          <div class="slot-box" id="box-weekday">
-            <span class="slot-label">星期</span>
-            <div class="drop-zone" id="slot-weekday" data-type="weekday">拖到這裡</div>
+      <!-- 第二頁：今天的心情 EMOJI -->
+      <div id="page-mood" class="page-view hidden">
+        <!-- 左側：當月大日曆底板（當天為放置目標） -->
+        <section class="left-panel">
+          <div class="calendar-display-board mood-board-layout">
+            <div class="plate-title large" id="p2-month-title">2026年 9月 心情日曆</div>
+            <div class="mood-calendar-canvas" id="p2-mood-grid"></div>
           </div>
-        </div>
+        </section>
 
-        <!-- 迷你日曆預覽 -->
-        <div class="mini-calendar-preview">
-          <div class="mini-cal-title" id="p1-cal-title">日曆底板</div>
-          <div class="mini-cal-grid" id="p1-cal-grid"></div>
-        </div>
+        <!-- 右側：心情 Emoji 選擇區 -->
+        <section class="right-panel">
+          <div class="cards-source-area">
+            <div class="source-title">💖 把今天的心情 EMOJI 放進今天的格子裡：</div>
+            <div class="moods-canvas" id="mood-cards-deck"></div>
+          </div>
+        </section>
       </div>
 
-      <!-- 朗讀句子互動區 -->
-      <div id="reading-box" class="reading-box hidden">
-        <div class="reading-hint">🗣️ 點擊字詞一起朗讀，觀察日曆哪裡在發光：</div>
-        <div class="sentence-row">
-          <span>今天是</span>
-          <button class="word-btn" data-target="year" id="word-year">____年</button>
-          <button class="word-btn" data-target="month" id="word-month">____月</button>
-          <button class="word-btn" data-target="day" id="word-day">____日</button>
-          <button class="word-btn" data-target="weekday" id="word-weekday">星期____</button>
-        </div>
-        <button id="btn-goto-mood" class="btn-next hidden">下一頁：今天的心情 ➡️</button>
-      </div>
-
-      <!-- 日期待選卡片區 -->
-      <div class="deck-container" id="date-deck-container">
-        <div class="deck-header">✨ 請拖曳或點選卡片：</div>
-        <div class="cards-deck" id="date-cards-deck"></div>
-      </div>
-    </section>
-
-    <!-- ===== 第二頁：今天的心情 EMOJI ===== -->
-    <section id="page-mood" class="page-section hidden">
-      <div class="calendar-board mood-board">
-        <div class="cal-header-label" id="p2-cal-title">本月日曆底板</div>
-        <div class="mood-calendar-grid" id="p2-cal-grid"></div>
-      </div>
-
-      <!-- 心情 EMOJI 選項區 -->
-      <div class="deck-container">
-        <div class="deck-header">💖 請把今天的心情拉進今天的格子裡：</div>
-        <div class="emoji-deck" id="emoji-deck"></div>
-      </div>
-    </section>
+    </main>
   </div>
 
-  <!-- 全關完成正向彈窗 -->
-  <div id="modal-success" class="modal-overlay hidden">
-    <div class="modal-card">
-      <div class="modal-icon">🌟🎉🌟</div>
-      <h2 class="modal-title">太棒了！你完成了今天的日曆！</h2>
-      <p class="modal-desc" id="modal-desc">你看得好專注，每一步都做得非常出色！</p>
-      <button id="btn-restart" class="btn-primary">再玩一次 🔄</button>
+  <!-- 正向教育全關完成獎勵彈窗 -->
+  <div id="modal-celebrate" class="celebrate-overlay hidden">
+    <div class="celebrate-card">
+      <div class="celebrate-badge">🎉 🌟 🎉</div>
+      <h2 class="celebrate-title">太棒了！你完成了今天的日曆！</h2>
+      <p class="celebrate-text" id="celebrate-message">你看得好專注，每一步都做得非常出色！</p>
+      <button id="btn-play-again" class="btn-restart-action">再玩一次 🔄</button>
     </div>
   </div>
 
