@@ -4,408 +4,504 @@
   padding: 0;
   user-select: none;
   -webkit-user-select: none;
-  font-family: "PingFang TC", "Microsoft JhengHei", "Heiti TC", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft JhengHei", sans-serif;
+}
+
+:root {
+  /* 初階色彩提示體系 (柔和低飽和度) */
+  --c-year-bg: #e1f5fe;
+  --c-year-border: #0288d1;
+  --c-month-bg: #e8f5e9;
+  --c-month-border: #388e3c;
+  --c-day-bg: #fff3e0;
+  --c-day-border: #f57c00;
+  --c-weekday-bg: #f3e5f5;
+  --c-weekday-border: #7b1fa2;
 }
 
 body {
-  background-color: #f2f7fb;
+  background-color: #e9eff5;
   color: #2c3e50;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
   display: flex;
   justify-content: center;
-  align-items: flex-start;
-  min-height: 100vh;
-  padding: 12px;
+  align-items: center;
   touch-action: manipulation;
 }
 
-.game-container {
-  width: 100%;
-  max-width: 650px;
+/* iPad 橫向容器 */
+.app-wrapper {
+  width: 100vw;
+  height: 100vh;
+  max-width: 1200px;
+  max-height: 800px;
   background: #ffffff;
-  border-radius: 24px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-  padding: 16px;
+  border-radius: 16px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  overflow: hidden;
 }
 
-.game-header {
-  text-align: center;
+/* 頂部資訊導航 */
+.top-bar {
+  height: 64px;
+  background: #f8fafc;
+  border-bottom: 2px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
 }
 
-.title {
-  font-size: 1.4rem;
-  color: #2b5876;
-  margin-bottom: 6px;
+.brand-zone {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.subtitle {
-  font-size: 0.9rem;
-  color: #607d8b;
-  margin-top: 6px;
-}
+.app-icon { font-size: 1.6rem; }
+.app-title { font-size: 1.25rem; color: #1e293b; }
 
-/* 難度控制切換列 */
-.difficulty-toggle {
-  display: inline-flex;
-  gap: 6px;
-  background: #eef2f5;
-  padding: 4px;
+.feedback-zone {
+  font-size: 1.05rem;
+  font-weight: bold;
+  padding: 6px 18px;
   border-radius: 20px;
+  background: #e2e8f0;
+  color: #334155;
+  transition: all 0.25s ease;
+}
+
+.feedback-zone.try-again {
+  background: #ffebee;
+  color: #d32f2f;
+  border: 1px solid #ffcdd2;
+}
+
+.feedback-zone.step-correct {
+  background: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #c8e6c9;
+}
+
+.mode-switch {
+  display: flex;
+  background: #e2e8f0;
+  border-radius: 14px;
+  padding: 3px;
 }
 
 .mode-btn {
   border: none;
   background: transparent;
   padding: 6px 14px;
-  border-radius: 16px;
-  font-size: 0.85rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
   font-weight: bold;
-  color: #607d8b;
+  color: #64748b;
   cursor: pointer;
-  transition: all 0.2s;
 }
 
 .mode-btn.active {
-  background: #2b5876;
+  background: #0288d1;
   color: #ffffff;
 }
 
-/* 正向回饋橫幅 */
-.feedback-banner {
-  background-color: #e8f4fd;
-  color: #1976d2;
-  border: 2px solid #b3e5fc;
-  border-radius: 12px;
-  padding: 8px 12px;
-  font-size: 1rem;
-  font-weight: bold;
-  text-align: center;
-  min-height: 42px;
+/* 橫向雙欄主佈局 */
+.landscape-main {
+  flex: 1;
+  height: calc(100% - 64px);
+  position: relative;
+}
+
+.page-view {
+  width: 100%;
+  height: 100%;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
+  padding: 16px;
+  gap: 16px;
 }
 
-.feedback-banner.try-again {
-  background-color: #fff3e0;
-  color: #e65100;
-  border-color: #ffe0b2;
+.page-view.hidden { display: none !important; }
+
+/* 左右分欄配比 */
+.left-panel {
+  flex: 1.1;
+  height: 100%;
 }
 
-.feedback-banner.success-step {
-  background-color: #e8f8f5;
-  color: #00796b;
-  border-color: #b2dfdb;
-}
-
-/* 日曆板容器 */
-.calendar-board {
-  background: #fafafa;
-  border: 3px dashed #b0bec5;
-  border-radius: 18px;
-  padding: 14px;
+.right-panel {
+  flex: 1.2;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
-.calendar-top, .calendar-bottom {
+/* 日曆工作展示板 */
+.calendar-display-board {
+  height: 100%;
+  background: #fdfefe;
+  border: 3px dashed #cbd5e1;
+  border-radius: 16px;
+  padding: 12px;
   display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   gap: 8px;
 }
 
-.slot-box {
+.board-header-slots {
+  display: flex;
+  gap: 10px;
+}
+
+.slot-container {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: #ffffff;
-  padding: 8px;
-  border-radius: 12px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
 }
 
-.slot-label {
-  font-size: 0.8rem;
-  color: #78909c;
+.slot-tag {
+  font-size: 0.85rem;
   font-weight: bold;
+  color: #64748b;
   margin-bottom: 4px;
 }
 
-/* 大尺寸目標槽 (防手震與誤觸) */
-.drop-zone {
+/* 放置目標槽 (大尺寸防誤觸) */
+.drop-target {
   width: 100%;
-  min-height: 52px;
-  border: 2px dashed #90caf9;
-  background-color: #f5faff;
-  border-radius: 10px;
+  min-height: 54px;
+  border-radius: 12px;
+  border: 2px dashed #94a3b8;
+  background: #f1f5f9;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.05rem;
-  color: #90a4ae;
-  transition: all 0.2s;
-}
-
-.drop-zone.day-zone {
-  min-height: 60px;
-  font-size: 1.35rem;
-}
-
-.drop-zone.drag-over {
-  background-color: #e3f2fd;
-  border-color: #2196f3;
-  transform: scale(1.02);
-}
-
-.drop-zone.matched {
-  border: 2px solid #4caf50;
-  background-color: #e8f5e9;
-  color: #2e7d32;
+  font-size: 1.15rem;
   font-weight: bold;
+  color: #94a3b8;
+  transition: all 0.2s ease;
 }
 
-/* 點擊文字時日曆同步閃爍 */
-.flash-highlight {
-  animation: pulseSlot 1s infinite alternate ease-in-out;
-  border: 2px solid #ff9800 !important;
-  background-color: #fff8e1 !important;
-  box-shadow: 0 0 12px #ffb74d !important;
+.drop-target.day-target {
+  min-height: 64px;
+  font-size: 1.4rem;
+}
+
+/* 初階色彩模式下的放置槽淡色底塊 */
+.color-easy #slot-year { background: var(--c-year-bg); border-color: var(--c-year-border); color: #0277bd; }
+.color-easy #slot-month { background: var(--c-month-bg); border-color: var(--c-month-border); color: #2e7d32; }
+.color-easy #slot-day { background: var(--c-day-bg); border-color: var(--c-day-border); color: #e65100; }
+.color-easy #slot-weekday { background: var(--c-weekday-bg); border-color: var(--c-weekday-border); color: #6a1b9a; }
+
+.drop-target.drag-hover {
+  transform: scale(1.03);
+  filter: brightness(0.95);
+}
+
+.drop-target.filled {
+  border-style: solid;
+  border-width: 3px;
+  font-size: 1.3rem;
+  color: #1e293b !important;
+}
+
+/* 點選句子同步閃亮提示 */
+.slot-flash {
+  animation: pulseSlot 1.2s infinite alternate ease-in-out;
+  box-shadow: 0 0 16px #ff9800 !important;
+  border-color: #ff9800 !important;
 }
 
 @keyframes pulseSlot {
   0% { transform: scale(1); }
-  100% { transform: scale(1.07); }
+  100% { transform: scale(1.05); }
 }
 
-/* 迷你月曆與第二頁大型月曆 */
-.mini-calendar-preview {
+/* 迷你日曆底板 */
+.mini-month-plate {
   background: #ffffff;
-  border: 1px solid #e0e0e0;
+  border: 1px solid #e2e8f0;
   border-radius: 10px;
-  padding: 8px;
+  padding: 6px;
 }
 
-.mini-cal-title, .cal-header-label {
-  font-size: 0.85rem;
+.plate-title {
+  font-size: 0.8rem;
   font-weight: bold;
-  color: #546e7a;
   text-align: center;
-  margin-bottom: 6px;
+  color: #64748b;
+  margin-bottom: 4px;
 }
 
-.mini-cal-grid, .mood-calendar-grid {
+.plate-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 3px;
+  gap: 2px;
   text-align: center;
+  font-size: 0.72rem;
 }
 
-.cal-cell {
-  padding: 4px 2px;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  color: #78909c;
+.mini-cell {
+  padding: 3px 0;
+  border-radius: 4px;
+  color: #94a3b8;
+}
+
+.mini-cell.today-marked {
+  background: #ff7043;
+  color: #ffffff;
+  font-weight: bold;
+}
+
+/* 右側操作卡片區 */
+.cards-source-area {
+  flex: 1;
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
+}
+
+.source-title {
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #475569;
+  margin-bottom: 8px;
+}
+
+.cards-canvas {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  align-content: center;
+}
+
+/* 大尺寸待選卡片 */
+.choice-card {
+  min-height: 58px;
+  border-radius: 14px;
+  border: 2px solid #94a3b8;
+  background: #ffffff;
+  display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 28px;
-}
-
-.cal-cell.highlight-day {
-  background: #ffe0b2;
-  color: #e65100;
+  font-size: 1.2rem;
   font-weight: bold;
+  color: #1e293b;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.04);
+  cursor: grab;
+  touch-action: none;
 }
 
-/* 第二頁今天的心情放置格 */
-.cal-cell.today-mood-dropzone {
-  background: #fff8e1;
-  border: 2px dashed #ffa000;
-  min-height: 54px;
-  color: #d84315;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s;
-}
+/* 初階色彩模式下卡片對應色 */
+.color-easy .card-year { background: var(--c-year-bg); border-color: var(--c-year-border); color: #01579b; }
+.color-easy .card-month { background: var(--c-month-bg); border-color: var(--c-month-border); color: #1b5e20; }
+.color-easy .card-day { background: var(--c-day-bg); border-color: var(--c-day-border); color: #bf360c; }
+.color-easy .card-weekday { background: var(--c-weekday-bg); border-color: var(--c-weekday-border); color: #4a148c; }
 
-.cal-cell.today-mood-dropzone.drag-over {
-  background-color: #ffe082;
+.choice-card:active, .choice-card.dragging {
+  cursor: grabbing;
   transform: scale(1.06);
+  opacity: 0.9;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.15);
 }
 
-.cal-cell.today-mood-dropzone.mood-filled {
-  border: 2px solid #4caf50;
-  background: #e8f5e9;
-  font-size: 1.6rem;
+.choice-card.selected-tap {
+  outline: 3px solid #ff9800;
 }
 
-/* 朗讀句子列 */
-.reading-box {
+.choice-card.vanished {
+  display: none;
+}
+
+/* 朗讀句子區域 */
+.sentence-panel {
   background: #fffde7;
   border: 2px solid #fff59d;
   border-radius: 14px;
-  padding: 12px;
-  text-align: center;
+  padding: 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
 }
 
-.reading-hint {
+.panel-guide {
   font-size: 0.85rem;
   font-weight: bold;
   color: #f57f17;
 }
 
-.sentence-row {
+.sentence-display {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  font-size: 1.15rem;
+  font-size: 1.2rem;
   font-weight: bold;
 }
 
-.word-btn {
-  background: #ffffff;
+.read-chip {
+  padding: 4px 10px;
+  border-radius: 8px;
   border: 2px solid #fbc02d;
-  color: #e65100;
+  background: #ffffff;
   font-size: 1.15rem;
   font-weight: bold;
-  padding: 4px 10px;
-  border-radius: 10px;
   cursor: pointer;
 }
 
-.btn-next {
+.read-chip:active { transform: scale(0.95); }
+
+.action-btn-next {
   background: #ff9800;
   color: white;
   border: none;
   font-size: 1.05rem;
   font-weight: bold;
-  padding: 8px 20px;
+  padding: 8px 24px;
   border-radius: 20px;
   cursor: pointer;
-  box-shadow: 0 3px 8px rgba(255, 152, 0, 0.3);
-  margin-top: 4px;
+  box-shadow: 0 4px 10px rgba(255, 152, 0, 0.3);
 }
 
-/* 待選卡片區 */
-.deck-container {
-  background: #f1f8e9;
-  border-radius: 16px;
-  padding: 12px;
+/* 第二頁大型月曆心情板 */
+.mood-board-layout {
+  justify-content: flex-start;
+  gap: 12px;
 }
 
-.deck-header {
-  font-size: 0.9rem;
-  color: #33691e;
+.plate-title.large {
+  font-size: 1.1rem;
+}
+
+.mood-calendar-canvas {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  align-content: start;
+}
+
+.cal-slot-cell {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  min-height: 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.cal-slot-cell.header {
+  min-height: 28px;
   font-weight: bold;
-  margin-bottom: 8px;
+  background: #f1f5f9;
 }
 
-.cards-deck {
+/* 當天的心情放置目標大格 */
+.cal-slot-cell.today-target-slot {
+  border: 2px dashed #ff9800;
+  background: #fff8e1;
+  color: #e65100;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.cal-slot-cell.today-target-slot.drag-hover {
+  background: #ffe082;
+  transform: scale(1.05);
+}
+
+.cal-slot-cell.today-target-slot.filled-mood {
+  border: 2px solid #4caf50;
+  background: #e8f5e9;
+  font-size: 1.8rem;
+}
+
+/* 心情卡片展示網格 (初階 4 個 / 進階 8 個) */
+.moods-canvas {
+  flex: 1;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 10px;
+  align-content: center;
 }
 
-.emoji-deck {
-  display: flex;
-  justify-content: space-around;
-  gap: 10px;
-}
-
-.draggable-card, .emoji-card {
-  min-height: 52px;
-  background-color: #ffffff;
-  border: 2px solid #81c784;
-  color: #2e7d32;
-  font-size: 1.1rem;
-  font-weight: bold;
-  border-radius: 12px;
+.mood-card-btn {
+  min-height: 60px;
+  background: #ffffff;
+  border: 2px solid #ffcc80;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #334155;
   cursor: grab;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);
   touch-action: none;
 }
 
-.emoji-card {
-  flex: 1;
-  min-height: 60px;
-  font-size: 2rem;
-  border-color: #ffb74d;
+.mood-card-btn .emoji-icon {
+  font-size: 1.8rem;
 }
 
-.draggable-card:active, .emoji-card:active, .dragging {
+.mood-card-btn:active, .mood-card-btn.dragging {
   cursor: grabbing;
-  transform: scale(1.06);
-  opacity: 0.85;
+  transform: scale(1.05);
 }
 
-.selected-tap {
-  border-color: #ff9800 !important;
-  background-color: #fff8e1 !important;
-}
-
-.hidden {
-  display: none !important;
-}
-
-/* 全螢幕完成彈窗 */
-.modal-overlay {
+/* 慶祝彈窗 */
+.celebrate-overlay {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 999;
-  padding: 16px;
 }
 
-.modal-card {
+.celebrate-card {
+  width: 90%;
+  max-width: 440px;
   background: #ffffff;
-  border-radius: 20px;
-  padding: 24px 20px;
+  border-radius: 24px;
+  padding: 28px 20px;
   text-align: center;
-  max-width: 380px;
-  width: 100%;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
 }
 
-.modal-icon {
-  font-size: 3rem;
-  margin-bottom: 8px;
-}
+.celebrate-badge { font-size: 3rem; margin-bottom: 8px; }
+.celebrate-title { font-size: 1.4rem; color: #2e7d32; margin-bottom: 8px; }
+.celebrate-text { font-size: 1.05rem; color: #475569; margin-bottom: 24px; }
 
-.modal-title {
-  color: #2e7d32;
-  font-size: 1.35rem;
-  margin-bottom: 6px;
-}
-
-.modal-desc {
-  color: #555;
-  font-size: 0.95rem;
-  margin-bottom: 18px;
-}
-
-.btn-primary {
-  background: #4caf50;
-  color: #fff;
+.btn-restart-action {
+  background: #22c55e;
+  color: white;
   border: none;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   font-weight: bold;
-  padding: 10px 26px;
-  border-radius: 25px;
+  padding: 12px 36px;
+  border-radius: 30px;
   cursor: pointer;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
 }
+
+.hidden { display: none !important; }
