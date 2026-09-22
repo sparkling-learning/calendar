@@ -17,18 +17,20 @@
       <div id="feedback-banner" class="feedback-banner" aria-live="polite">
         請在月曆中找出正確卡片，拉到句子裡！
       </div>
-      <div class="mode-switch-wrap">
-        <button id="btn-mode-easy" class="btn-mode active">初階版</button>
-        <button id="btn-mode-hard" class="btn-mode">進階版</button>
+      <div class="header-actions">
+        <div class="mode-switch-wrap">
+          <button id="btn-mode-easy" class="btn-mode active">初階版</button>
+          <button id="btn-mode-hard" class="btn-mode">進階版</button>
+        </div>
+        <button id="btn-restart" class="btn-restart-top">再玩一次 🔄</button>
       </div>
     </header>
 
-    <!-- 主遊戲舞台 -->
+    <!-- 主遊戲舞台 (iPad 橫向比例) -->
     <main class="main-content">
-      <!-- 上半部：放大版真實月曆 -->
+      <!-- 上半部：放大版月曆 -->
       <section class="calendar-section">
         <div class="calendar-plate">
-          <!-- 月曆頂部：年份與月份 -->
           <div class="cal-top-row">
             <div class="cal-slot-item">
               <span class="slot-label-text">年份：</span>
@@ -40,14 +42,13 @@
             </div>
           </div>
 
-          <!-- 月曆網格：星期標題與日期格子 -->
           <div class="cal-grid" id="cal-grid"></div>
         </div>
       </section>
 
-      <!-- 下半部：句子與心情引導區 -->
+      <!-- 下半部：句子 (放大25%) 與 心情 (放大30%) -->
       <section class="bottom-section">
-        <!-- 句子填空列 -->
+        <!-- 句子填空列 (放大25%) -->
         <div class="sentence-box">
           <div class="sentence-guide" id="sentence-guide-txt">
             🗣️ 請把月曆上的字卡拖進句子空格裡，完成後一起朗讀：
@@ -61,23 +62,13 @@
           </div>
         </div>
 
-        <!-- 心情互動區 (完成句子後顯示) -->
+        <!-- 心情互動區 (放大30%，保留畫面供分享) -->
         <div class="mood-box hidden" id="mood-section">
-          <div class="mood-question">💖 今天的心情怎麼樣？請把情緒卡片拉到當天的月曆格子中：</div>
+          <div class="mood-question" id="mood-prompt-title">💖 今天的心情怎麼樣？請把情緒卡片拉到當天的月曆格子中：</div>
           <div class="mood-deck" id="mood-deck"></div>
         </div>
       </section>
     </main>
-  </div>
-
-  <!-- 正向激勵全關完成彈窗 -->
-  <div id="modal-celebrate" class="modal-overlay hidden">
-    <div class="modal-card">
-      <div class="modal-badge">🌟 🎉 🌟</div>
-      <h2 class="modal-title">太棒了！你完成了今天的日曆！</h2>
-      <p class="modal-desc" id="celebrate-text">你看得好專注，學會了自己閱讀月曆並記錄心情！</p>
-      <button id="btn-restart" class="btn-restart">再玩一次 🔄</button>
-    </div>
   </div>
 
   <script src="script.js"></script>
