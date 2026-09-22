@@ -1,199 +1,211 @@
 /**
- * 認識月曆：看月曆讀句子 - SEN 幼兒互動學習遊戲
- * 特色：真實月曆極大化、月曆中直接抓取卡片、初階色彩鷹架相配、正向教育回饋
+ * 認識月曆與心情 - SEN 幼兒互動遊戲
+ * 玩法：看月曆拖曳卡片填寫句子 -> 出示心情問句 -> 拉放 Emoji 到月曆當天格子
  */
 
-const WEEKDAY_NAMES = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+const WEEKDAYS = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
 
-// 動態讀取當天真實日期
-function fetchTodayData() {
+// 當天真實系統時間
+function getTodayInfo() {
   const now = new Date();
   return {
     year: now.getFullYear(),
     month: now.getMonth() + 1,
     day: now.getDate(),
-    weekday: WEEKDAY_NAMES[now.getDay()],
-    dayOfWeekIdx: now.getDay()
+    weekday: WEEKDAYS[now.getDay()],
+    dayIdx: now.getDay()
   };
 }
 
-let today = fetchTodayData();
+let today = getTodayInfo();
 let currentMode = 'easy'; // 'easy' 或 'hard'
 
 let state = {
-  matched: { year: false, month: false, day: false, weekday: false },
-  selectedCardId: null
+  dateMatched: { year: false, month: false, day: false, weekday: false },
+  selectedCardId: null,
+  isDateStepFinished: false,
+  selectedMood: null
 };
 
-// DOM 元素引用
-const viewport = document.querySelector('.game-viewport');
+// DOM 元素
+const container = document.querySelector('.game-container');
 const feedbackBanner = document.getElementById('feedback-banner');
 const cardYear = document.getElementById('card-year');
 const cardMonth = document.getElementById('card-month');
-const calGridPlate = document.getElementById('cal-grid-plate');
+const calGrid = document.getElementById('cal-grid');
+const moodSection = document.getElementById('mood-section');
+const moodDeck = document.getElementById('mood-deck');
 const modalCelebrate = document.getElementById('modal-celebrate');
 const btnRestart = document.getElementById('btn-restart');
 const btnModeEasy = document.getElementById('btn-mode-easy');
 const btnModeHard = document.getElementById('btn-mode-hard');
 
-// 正向教育回饋提示列
+// 正向回饋橫幅
 function notifyFeedback(text, type = 'normal') {
   feedbackBanner.textContent = text;
-  feedbackBanner.className = 'feedback-box';
+  feedbackBanner.className = 'feedback-banner';
   if (type === 'try-again') feedbackBanner.classList.add('try-again');
   if (type === 'success') feedbackBanner.classList.add('step-correct');
 }
 
-// 繪製放大的實體月曆板面
-function buildCalendarBoard() {
-  // 1. 設定頂部 年份 與 月份 卡片
+// 建立月曆板
+function renderCalendarPlate() {
   cardYear.textContent = `${today.year}年`;
   cardMonth.textContent = `${today.month}月`;
-  setupUniversalCardInteractions(cardYear);
-  setupUniversalCardInteractions(cardMonth);
+  bindUniversalDrag(cardYear, handleDateMatch);
+  bindUniversalDrag(cardMonth, handleDateMatch);
 
-  // 2. 清空並繪製星期與日期網格
-  calGridPlate.innerHTML = '';
+  calGrid.innerHTML = '';
 
-  // 星期列（當天的星期幾轉為可拖曳卡片）
-  WEEKDAY_NAMES.forEach((wName, idx) => {
-    if (idx === today.dayOfWeekIdx) {
+  // 星期標題
+  WEEKDAYS.forEach((w, idx) => {
+    if (idx === today.dayIdx && !state.isDateStepFinished) {
       const wCard = document.createElement('div');
       wCard.className = 'source-card card-weekday';
       wCard.id = 'card-weekday';
       wCard.setAttribute('data-type', 'weekday');
-      wCard.textContent = wName;
-      setupUniversalCardInteractions(wCard);
-      calGridPlate.appendChild(wCard);
+      wCard.textContent = w;
+      bindUniversalDrag(wCard, handleDateMatch);
+      calGrid.appendChild(wCard);
     } else {
-      const headerCell = document.createElement('div');
-      headerCell.className = 'grid-cell week-header';
-      headerCell.textContent = wName;
-      calGridPlate.appendChild(headerCell);
+      const wCell = document.createElement('div');
+      wCell.className = 'grid-cell week-header';
+      wCell.textContent = w;
+      calGrid.appendChild(wCell);
     }
   });
 
-  // 計算該月天數與第一天的星期
+  // 計算天數與開首星期
   const firstDayOfWeek = new Date(today.year, today.month - 1, 1).getDay();
   const daysInMonth = new Date(today.year, today.month, 0).getDate();
 
-  // 空白填充
   for (let b = 0; b < firstDayOfWeek; b++) {
     const blank = document.createElement('div');
     blank.className = 'grid-cell';
-    calGridPlate.appendChild(blank);
+    calGrid.appendChild(blank);
   }
 
-  // 渲染日數（當天變為可拖曳卡片，其餘為一般日期格）
   for (let d = 1; d <= daysInMonth; d++) {
     if (d === today.day) {
-      const dayCard = document.createElement('div');
-      dayCard.className = 'source-card card-day';
-      dayCard.id = 'card-day';
-      dayCard.setAttribute('data-type', 'day');
-      dayCard.textContent = `${d}日`;
-      setupUniversalCardInteractions(dayCard);
-      calGridPlate.appendChild(dayCard);
+      if (!state.isDateStepFinished) {
+        // 第一階段：當天作為「日期可拖曳卡」
+        const dayCard = document.createElement('div');
+        dayCard.className = 'source-card card-day';
+        dayCard.id = 'card-day';
+        dayCard.setAttribute('data-type', 'day');
+        dayCard.textContent = `${d}日`;
+        bindUniversalDrag(dayCard, handleDateMatch);
+        calGrid.appendChild(dayCard);
+      } else {
+        // 第二階段：當天變成「心情放置格」
+        const targetCell = document.createElement('div');
+        targetCell.className = 'grid-cell today-slot';
+        targetCell.id = 'today-mood-dropzone';
+        if (state.selectedMood) {
+          targetCell.classList.add('mood-filled');
+          targetCell.innerHTML = `<span>${d}日</span><span>${state.selectedMood.emoji}</span>`;
+        } else {
+          targetCell.innerHTML = `<span>${d}日</span><small>放心情</small>`;
+        }
+        setupMoodDropZone(targetCell);
+        calGrid.appendChild(targetCell);
+      }
     } else {
-      const normalDayCell = document.createElement('div');
-      normalDayCell.className = 'grid-cell';
-      normalDayCell.textContent = d;
-      calGridPlate.appendChild(normalDayCell);
+      const dCell = document.createElement('div');
+      dCell.className = 'grid-cell';
+      dCell.textContent = d;
+      calGrid.appendChild(dCell);
     }
   }
 }
 
-// 支援「觸控/滑鼠拖曳」與「二段式點擊」雙相容互動
-function setupUniversalCardInteractions(cardEl) {
+// 支援「觸控/滑鼠拖曳」與「點選配對」雙機制
+function bindUniversalDrag(element, onDropCallback) {
   let touchStartX = 0;
   let touchStartY = 0;
-  let isMoving = false;
+  let isDragging = false;
 
-  // 點擊選取模式 (防小肌肉手震與拖曳不適應)
-  cardEl.addEventListener('click', () => {
-    if (isMoving || cardEl.classList.contains('placed')) return;
-    document.querySelectorAll('.source-card').forEach(c => c.classList.remove('selected-tap'));
-    cardEl.classList.add('selected-tap');
-    state.selectedCardId = cardEl.id;
-    notifyFeedback(`選好囉！請點選下方句子裡的目標空格！`);
+  element.addEventListener('click', () => {
+    if (isDragging || element.classList.contains('placed')) return;
+    document.querySelectorAll('.source-card, .mood-card').forEach(c => c.classList.remove('selected-tap'));
+    element.classList.add('selected-tap');
+    state.selectedCardId = element.id;
+    notifyFeedback(`選好囉！請點選目標空格放進去！`);
   });
 
-  // 觸控拖曳模式
-  cardEl.addEventListener('touchstart', (e) => {
-    if (cardEl.classList.contains('placed')) return;
-    isMoving = false;
+  element.addEventListener('touchstart', (e) => {
+    if (element.classList.contains('placed')) return;
+    isDragging = false;
     const t = e.touches[0];
     touchStartX = t.clientX;
     touchStartY = t.clientY;
-    cardEl.classList.add('dragging');
+    element.classList.add('dragging');
   }, { passive: true });
 
-  cardEl.addEventListener('touchmove', (e) => {
-    if (cardEl.classList.contains('placed')) return;
+  element.addEventListener('touchmove', (e) => {
+    if (element.classList.contains('placed')) return;
     const t = e.touches[0];
     if (Math.abs(t.clientX - touchStartX) > 8 || Math.abs(t.clientY - touchStartY) > 8) {
-      isMoving = true;
+      isDragging = true;
     }
-    cardEl.style.position = 'fixed';
-    cardEl.style.left = `${t.clientX - 45}px`;
-    cardEl.style.top = `${t.clientY - 25}px`;
-    cardEl.style.zIndex = '1000';
+    element.style.position = 'fixed';
+    element.style.left = `${t.clientX - 45}px`;
+    element.style.top = `${t.clientY - 25}px`;
+    element.style.zIndex = '1000';
   }, { passive: true });
 
-  cardEl.addEventListener('touchend', (e) => {
-    if (cardEl.classList.contains('placed')) return;
-    cardEl.classList.remove('dragging');
+  element.addEventListener('touchend', (e) => {
+    if (element.classList.contains('placed')) return;
+    element.classList.remove('dragging');
     const t = e.changedTouches[0];
-    cardEl.style.position = ''; cardEl.style.left = ''; cardEl.style.top = ''; cardEl.style.zIndex = '';
+    element.style.position = ''; element.style.left = ''; element.style.top = ''; element.style.zIndex = '';
 
     const hitEl = document.elementFromPoint(t.clientX, t.clientY);
-    const dropTarget = hitEl ? hitEl.closest('.sentence-slot') : null;
+    const dropTarget = hitEl ? (hitEl.closest('.sentence-slot') || hitEl.closest('#today-mood-dropzone')) : null;
 
     if (dropTarget) {
-      handleMatchAttempt(cardEl, dropTarget);
+      onDropCallback(element, dropTarget);
     }
-    setTimeout(() => { isMoving = false; }, 50);
+    setTimeout(() => { isDragging = false; }, 50);
   });
 }
 
-// 監聽句子目標槽點擊
+// 監聽第一階段句子空格
 function setupSentenceSlots() {
   document.querySelectorAll('.sentence-slot').forEach(slot => {
     slot.addEventListener('click', () => {
-      // 若已填入完成，點擊則觸發與月曆的「同步閃爍」提示
+      // 若已填滿，點擊觸發月曆對應卡片閃亮
       if (slot.classList.contains('filled')) {
-        triggerFlashSync(slot.getAttribute('data-type'));
+        flashCalendarSource(slot.getAttribute('data-type'));
         return;
       }
-
-      // 若處於選卡狀態，執行配對
       if (state.selectedCardId) {
         const card = document.getElementById(state.selectedCardId);
-        if (card) handleMatchAttempt(card, slot);
+        if (card && card.classList.contains('source-card')) {
+          handleDateMatch(card, slot);
+        }
       }
     });
-
     slot.addEventListener('dragover', (e) => e.preventDefault());
   });
 }
 
-// 配對判定與正向回饋邏輯
-function handleMatchAttempt(card, slot) {
+// 配對判定 (看月曆填句子)
+function handleDateMatch(card, slot) {
   const cardType = card.getAttribute('data-type');
   const slotType = slot.getAttribute('data-type');
 
   if (cardType === slotType) {
-    // 配對成功
     slot.textContent = card.textContent;
-    slot.classList.add('filled', 'clickable-read');
+    slot.classList.add('filled');
     card.classList.add('placed');
-    state.matched[cardType] = true;
+    state.dateMatched[cardType] = true;
     state.selectedCardId = null;
 
     notifyFeedback(`好棒的觀察！成功把「${card.textContent}」放進句子裡！`, 'success');
-    checkAllComplete();
+    checkDateStepComplete();
   } else {
-    // 配對失敗：出示指定正向鼓勵語句
+    // 嚴格落實指定鼓勵語句
     notifyFeedback('欣賞你努力、再試一次', 'try-again');
     if (state.selectedCardId) {
       card.classList.remove('selected-tap');
@@ -202,87 +214,149 @@ function handleMatchAttempt(card, slot) {
   }
 }
 
-// 點擊句子中的詞彙，月曆原位置同步發光閃亮 (建立位置概念)
-function triggerFlashSync(type) {
-  const cardMap = {
-    year: 'card-year',
-    month: 'card-month',
-    day: 'card-day',
-    weekday: 'card-weekday'
-  };
-
-  const targetCard = document.getElementById(cardMap[type]);
-  if (targetCard) {
+// 朗讀時月曆位置閃亮 (Pulse)
+function flashCalendarSource(type) {
+  const map = { year: 'card-year', month: 'card-month', day: 'card-day', weekday: 'card-weekday' };
+  const target = document.getElementById(map[type]);
+  if (target) {
     document.querySelectorAll('.source-card').forEach(c => c.classList.remove('flash-focus'));
-    targetCard.classList.add('flash-focus');
-    setTimeout(() => {
-      targetCard.classList.remove('flash-focus');
-    }, 1800);
+    target.classList.add('flash-focus');
+    setTimeout(() => target.classList.remove('flash-focus'), 1600);
   }
 }
 
-// 檢查是否所有空格均已完成
-function checkAllComplete() {
-  const isDone = Object.values(state.matched).every(Boolean);
-  if (isDone) {
-    notifyFeedback('太棒了！請跟著讀一讀句子，也可以點擊詞彙看看月曆哪裡在發光！', 'success');
+// 第一階段全完成 -> 轉入第二階段心情
+function checkDateStepComplete() {
+  const isAll = Object.values(state.dateMatched).every(Boolean);
+  if (isAll) {
+    state.isDateStepFinished = true;
+    document.getElementById('sentence-guide-txt').textContent = '🗣️ 太棒了！請讀一讀完成的句子，點擊詞彙可觀察月曆哪裡在發光：';
+    notifyFeedback('太棒了！句子完成了！現在請看看今天的心情！', 'success');
+
+    // 展開心情區塊並重繪月曆（將當天切換為放置槽）
+    moodSection.classList.remove('hidden');
+    renderCalendarPlate();
+    renderMoodDeck();
+  }
+}
+
+// 生成心情情緒卡片
+function renderMoodDeck() {
+  moodDeck.innerHTML = '';
+
+  const easyMoods = [
+    { id: 'm-happy', emoji: '😊', label: '開心' },
+    { id: 'm-sad', emoji: '😢', label: '傷心' },
+    { id: 'm-angry', emoji: '😡', label: '生氣' },
+    { id: 'm-scared', emoji: '😨', label: '害怕' }
+  ];
+
+  const advancedMoods = [
+    ...easyMoods,
+    { id: 'm-disappointed', emoji: '😞', label: '失望' },
+    { id: 'm-nervous', emoji: '😬', label: '緊張' },
+    { id: 'm-excited', emoji: '🤩', label: '興奮' },
+    { id: 'm-worried', emoji: '😟', label: '擔心' }
+  ];
+
+  const currentList = currentMode === 'easy' ? easyMoods : advancedMoods;
+
+  currentList.forEach(m => {
+    const card = document.createElement('div');
+    card.className = 'mood-card';
+    card.id = m.id;
+    card.setAttribute('data-emoji', m.emoji);
+    card.setAttribute('data-label', m.label);
+    card.innerHTML = `<span>${m.emoji}</span><span>${m.label}</span>`;
+
+    bindUniversalDrag(card, handleMoodMatch);
+    moodDeck.appendChild(card);
+  });
+}
+
+// 監聽心情放置槽點擊
+function setupMoodDropZone(dropZone) {
+  dropZone.addEventListener('click', () => {
+    if (state.selectedCardId) {
+      const card = document.getElementById(state.selectedCardId);
+      if (card && card.classList.contains('mood-card')) {
+        handleMoodMatch(card, dropZone);
+      }
+    }
+  });
+  dropZone.addEventListener('dragover', (e) => e.preventDefault());
+}
+
+// 心情放入判定
+function handleMoodMatch(card, dropZone) {
+  if (dropZone.id === 'today-mood-dropzone') {
+    const emoji = card.getAttribute('data-emoji');
+    const label = card.getAttribute('data-label');
+    state.selectedMood = { emoji, label };
+
+    dropZone.innerHTML = `<span>${today.day}日</span><span style="font-size:1.6rem">${emoji}</span>`;
+    dropZone.classList.add('mood-filled');
+    notifyFeedback(`真棒！記錄下了今天的心情：${label}！`, 'success');
+
     setTimeout(() => {
       document.getElementById('celebrate-text').textContent = 
-        `你學會了閱讀月曆，並完成了句子：「今天是 ${today.year}年 ${today.month}月 ${today.day}日 ${today.weekday}」！`;
+        `你學會了閱讀月曆，完成句子「今天是 ${today.year}年 ${today.month}月 ${today.day}日 ${today.weekday}」，並記錄了 ${label} 的心情！`;
       modalCelebrate.classList.remove('hidden');
-    }, 1800);
+    }, 1200);
+  } else {
+    notifyFeedback('欣賞你努力、再試一次', 'try-again');
   }
 }
 
-// 重置與重置介面
-function resetGameEngine() {
-  today = fetchTodayData();
+// 重置遊戲
+function resetGame() {
+  today = getTodayInfo();
   state = {
-    matched: { year: false, month: false, day: false, weekday: false },
-    selectedCardId: null
+    dateMatched: { year: false, month: false, day: false, weekday: false },
+    selectedCardId: null,
+    isDateStepFinished: false,
+    selectedMood: null
   };
 
-  // 重設句子空格
-  document.getElementById('target-year').innerHTML = '<span class="slot-placeholder">____年</span>';
-  document.getElementById('target-month').innerHTML = '<span class="slot-placeholder">____月</span>';
-  document.getElementById('target-day').innerHTML = '<span class="slot-placeholder">____日</span>';
-  document.getElementById('target-weekday').innerHTML = '<span class="slot-placeholder">星期____</span>';
+  document.getElementById('target-year').textContent = '____年';
+  document.getElementById('target-month').textContent = '____月';
+  document.getElementById('target-day').textContent = '____日';
+  document.getElementById('target-weekday').textContent = '星期____';
+  document.querySelectorAll('.sentence-slot').forEach(s => s.classList.remove('filled'));
 
-  document.querySelectorAll('.sentence-slot').forEach(s => {
-    s.classList.remove('filled', 'clickable-read');
-  });
-
+  document.getElementById('sentence-guide-txt').textContent = '🗣️ 請把月曆上的字卡拖進句子空格裡，完成後一起朗讀：';
+  moodSection.classList.add('hidden');
   modalCelebrate.classList.add('hidden');
-  notifyFeedback('請在月曆中找出正確的卡片，拉到下方句子裡！');
 
-  // 切換色彩提示模式
+  notifyFeedback('請在月曆中找出正確卡片，拉到句子裡！');
+
   if (currentMode === 'easy') {
-    viewport.classList.add('easy-mode');
+    container.classList.add('easy-mode');
   } else {
-    viewport.classList.remove('easy-mode');
+    container.classList.remove('easy-mode');
   }
 
-  buildCalendarBoard();
+  renderCalendarPlate();
 }
 
-// 難度按鈕監聽
+// 難度切換
 btnModeEasy.addEventListener('click', () => {
   currentMode = 'easy';
   btnModeEasy.classList.add('active');
   btnModeHard.classList.remove('active');
-  resetGameEngine();
+  resetGame();
 });
 
 btnModeHard.addEventListener('click', () => {
   currentMode = 'hard';
   btnModeHard.classList.add('active');
   btnModeEasy.classList.remove('active');
-  resetGameEngine();
+  resetGame();
 });
 
-btnRestart.addEventListener('click', resetGameEngine);
+btnRestart.addEventListener('click', resetGame);
 
-// 程式啟動
-viewport.classList.add('easy-mode');
-buildCalendarBoard();
+// 程式開局啟動
+container.classList.add('easy-mode');
+renderCalendarPlate();
 setupSentenceSlots();
