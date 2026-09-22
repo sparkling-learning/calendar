@@ -335,7 +335,7 @@ function handleMoodMatch(card, dropZone) {
     dropZone.classList.add('mood-filled');
 
     moodPromptTitle.textContent = `💖 今天的心情是「${label} ${emoji}」！請小朋友和大家分享一下原因吧：`;
-    notifyFeedback(`太棒了！今天的心情是「${label}」！你做得非常好！`, 'success');
+    notifyFeedback(`謝謝你分享今天的心情是「${label}」！`, 'success');
 
     document.querySelectorAll('.mood-card').forEach(c => {
       if (c.id !== card.id) {
