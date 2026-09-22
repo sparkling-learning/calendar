@@ -1,0 +1,276 @@
+/* --- 基礎重置 --- */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent; /* 移除觸控高亮 */
+    font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+}
+
+body {
+    background-color: #f0f7ff;
+    color: #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 10px;
+    touch-action: manipulation; /* 基礎觸控適配 */
+}
+
+.game-container {
+    width: 100%;
+    max-width: 600px;
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* --- 頂部排版 --- */
+.game-header {
+    text-align: center;
+}
+
+.title {
+    font-size: 1.4rem;
+    color: #2b5876;
+}
+
+.instruction {
+    font-size: 0.95rem;
+    color: #555;
+    margin-top: 5px;
+}
+
+/* --- 正向反饋橫幅 --- */
+.feedback-banner {
+    background-color: #e3f2fd;
+    color: #1976d2;
+    border: 2px solid #90caf9;
+    border-radius: 10px;
+    padding: 10px;
+    font-size: 1rem;
+    font-weight: bold;
+    text-align: center;
+    transition: all 0.3s ease;
+    min-height: 45px;
+}
+
+.feedback-banner.try-again {
+    background-color: #fff3e0;
+    color: #e65100;
+    border-color: #ffb74d;
+}
+
+.feedback-banner.success-step {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border-color: #81c784;
+}
+
+/* --- 主遊戲區 layout --- */
+.main-game-area {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* --- 日曆板與目標槽 --- */
+.calendar-board {
+    background: #fafafa;
+    border: 3px dashed #b0bec5;
+    border-radius: 15px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.slot-row {
+    display: flex;
+    gap: 10px;
+}
+
+.slot-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.slot-group label {
+    font-size: 0.8rem;
+    color: #777;
+    margin-bottom: 3px;
+    font-weight: bold;
+}
+
+.drop-zone {
+    width: 100%;
+    min-height: 50px;
+    border: 3px solid #ddd;
+    background-color: #eee;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    color: #999;
+    transition: background-color 0.2s, border-color 0.2s;
+    user-select: none;
+}
+
+.drop-zone.day-zone {
+    min-height: 70px;
+    font-size: 1.5rem;
+}
+
+/* 拖曳中/配對後的目標槽樣式 */
+.drop-zone.drag-over {
+    border-color: #2196f3;
+    background-color: #e3f2fd;
+}
+
+.drop-zone.matched {
+    border: 3px solid #4caf50;
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    font-weight: bold;
+}
+
+/* --- 動態月曆底板 (保持更新) --- */
+.mini-calendar-preview {
+    margin-top: 10px;
+    background: #fff;
+    border-radius: 10px;
+    padding: 10px;
+    border: 1px solid #e0e0e0;
+}
+
+.mini-cal-title {
+    text-align: center;
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: #555;
+    margin-bottom: 5px;
+}
+
+.mini-cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    text-align: center;
+    font-size: 0.7rem;
+}
+
+.mini-cal-cell {
+    padding: 3px;
+    border-radius: 4px;
+    color: #888;
+}
+
+.mini-cal-cell.highlight {
+    background-color: #ff7043;
+    color: white;
+    font-weight: bold;
+}
+
+/* --- 卡片來源區 --- */
+.cards-source-container {
+    background: #fff;
+    border-radius: 15px;
+    padding: 10px;
+}
+
+.cards-source-container h3 {
+    font-size: 0.9rem;
+    color: #555;
+    margin-bottom: 10px;
+}
+
+.cards-deck {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+/* --- 可拖曳卡片 --- */
+.draggable-card {
+    min-height: 50px;
+    background-color: #fff;
+    border: 2px solid #81c784;
+    color: #2e7d32;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    user-select: none;
+    touch-action: none; /* 禁用預設觸控行為以利 JS 拖曳 */
+}
+
+.draggable-card.dragging {
+    opacity: 0.5;
+    cursor: grabbing;
+}
+
+.draggable-card.hidden {
+    display: none; /* 完成配對後隱藏 */
+}
+
+/* --- 完成彈窗 --- */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-overlay.hidden {
+    display: none;
+}
+
+.modal-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 25px;
+    text-align: center;
+    width: 85%;
+    max-width: 350px;
+}
+
+.success-icon {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+}
+
+.modal-title {
+    font-size: 1.3rem;
+    color: #2e7d32;
+}
+
+.modal-desc {
+    font-size: 0.9rem;
+    color: #555;
+    margin: 10px 0 20px 0;
+}
+
+.btn-primary {
+    background-color: #4caf50;
+    color: #fff;
+    border: none;
+    font-size: 1rem;
+    padding: 10px 20px;
+    border-radius: 25px;
+    cursor: pointer;
+}
