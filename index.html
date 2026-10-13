@@ -4,10 +4,350 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>認識月曆</title>
-  <link rel="stylesheet" href="style.css">
+  <style>
+    /* 1. 全域重設與背景 */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Microsoft JhengHei", "微軟正黑體", sans-serif;
+    }
+
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background-color: #2b3a42; /* 外圍底色 */
+    }
+
+    /* 2. 視窗等比例縮放容器 */
+    .game-scaler {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .game-container {
+      width: 1200px;
+      height: 750px;
+      min-width: 1200px;
+      min-height: 750px;
+      transform-origin: center center;
+      background: linear-gradient(135deg, #f0f7ff 0%, #e8f4f8 100%);
+      border-radius: 20px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      padding: 16px 24px;
+      color: #333;
+    }
+
+    /* 3. 頂部工具列 */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+      background: #ffffff;
+      padding: 0 20px;
+      border-radius: 14px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+      margin-bottom: 12px;
+    }
+
+    .header-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .header-icon { font-size: 26px; }
+    .header-title { font-size: 22px; font-weight: 700; color: #1e3a8a; }
+
+    .feedback-banner {
+      font-size: 18px;
+      font-weight: 600;
+      color: #3b82f6;
+      background: #eff6ff;
+      padding: 6px 16px;
+      border-radius: 20px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .mode-switch-wrap {
+      display: flex;
+      background: #e2e8f0;
+      padding: 3px;
+      border-radius: 10px;
+    }
+
+    .btn-mode {
+      border: none;
+      background: transparent;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      color: #64748b;
+    }
+    .btn-mode.active {
+      background: #3b82f6;
+      color: #fff;
+      box-shadow: 0 2px 5px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-restart-top {
+      border: none;
+      background: #10b981;
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* 4. 主內容區域佈局 */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow: hidden;
+    }
+
+    /* 上半部：月曆區 */
+    .calendar-section {
+      flex: 1.3;
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 12px 20px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .cal-plate {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .cal-top-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 40px;
+      margin-bottom: 8px;
+    }
+
+    .cal-slot-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 20px;
+      font-weight: bold;
+      color: #475569;
+    }
+
+    /* 月曆格 Grid 佈局（關鍵：一行 7 格） */
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      grid-gap: 6px;
+      flex: 1;
+      align-content: stretch;
+    }
+
+    .cal-header-cell {
+      background: #f1f5f9;
+      color: #475569;
+      font-weight: 700;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      padding: 4px 0;
+    }
+
+    .cal-cell {
+      background: #fafafa;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      font-weight: 600;
+      color: #334155;
+    }
+
+    .cal-cell.empty {
+      background: transparent;
+      border: none;
+    }
+
+    /* 可拖拉的卡片樣式 */
+    .source-card, .target-day-cell, [draggable="true"] {
+      cursor: grab;
+      touch-action: none;
+    }
+
+    .source-card {
+      background: #fed7aa;
+      color: #9a3412;
+      padding: 6px 16px;
+      border-radius: 10px;
+      font-size: 20px;
+      font-weight: 800;
+      border: 2px solid #f97316;
+      box-shadow: 0 3px 6px rgba(249, 115, 22, 0.2);
+    }
+
+    .target-day-cell {
+      background: #ffedd5 !important;
+      color: #c2410c !important;
+      border: 2px dashed #ea580c !important;
+      font-weight: 800;
+    }
+
+    /* 發光動畫效果 */
+    .glow-focus {
+      outline: 3px solid #f59e0b !important;
+      background-color: #fef08a !important;
+      box-shadow: 0 0 16px #f59e0b !important;
+      animation: pulse 1s infinite alternate;
+    }
+
+    @keyframes pulse {
+      from { transform: scale(1); }
+      to { transform: scale(1.06); }
+    }
+
+    /* 下半部：填空與心情區 */
+    .bottom-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .sentence-box {
+      background: #ffffff;
+      border-radius: 14px;
+      padding: 12px 20px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+    }
+
+    .sentence-guide {
+      font-size: 15px;
+      color: #64748b;
+      margin-bottom: 8px;
+    }
+
+    .sentence-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 24px;
+      font-weight: 700;
+      color: #1e293b;
+    }
+
+    .sentence-slot {
+      min-width: 110px;
+      height: 48px;
+      border: 2px dashed #94a3b8;
+      background: #f8fafc;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #94a3b8;
+      font-size: 20px;
+      padding: 0 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .sentence-slot.slot-hover {
+      background: #e0f2fe;
+      border-color: #0284c7;
+    }
+
+    .sentence-slot.slot-filled {
+      background: #dcfce7;
+      border: 2px solid #22c55e;
+      color: #15803d;
+      font-weight: 800;
+    }
+
+    .sentence-slot.slot-error {
+      background: #fee2e2;
+      border-color: #ef4444;
+    }
+
+    /* 心情互動區 */
+    .mood-box {
+      background: #ffffff;
+      border-radius: 14px;
+      padding: 10px 20px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .mood-box.hidden {
+      display: none;
+    }
+
+    .mood-question {
+      font-size: 17px;
+      font-weight: 700;
+      color: #be185d;
+    }
+
+    .mood-deck {
+      display: flex;
+      gap: 12px;
+    }
+
+    .mood-card {
+      border: 2px solid #fbcfe8;
+      background: #fff;
+      padding: 6px 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 16px;
+      font-weight: bold;
+      color: #831843;
+      transition: transform 0.15s ease;
+    }
+
+    .mood-card:hover, .mood-card.selected {
+      background: #fdf2f8;
+      border-color: #db2777;
+      transform: scale(1.05);
+    }
+  </style>
 </head>
 <body>
-  <!-- 外層自適應置中舞台 -->
+  <!-- 外層自適應舞台 -->
   <div id="game-scaler" class="game-scaler">
     <div class="game-container" id="game-container">
       
@@ -31,17 +371,17 @@
 
       <!-- 主遊戲舞台 -->
       <main class="main-content">
-        <!-- 上半部：放大版月曆 -->
+        <!-- 上半部：月曆區 -->
         <section class="calendar-section">
-          <div class="calendar-plate">
+          <div class="cal-plate">
             <div class="cal-top-row">
               <div class="cal-slot-item">
                 <span class="slot-label-text">年份：</span>
-                <div class="source-card card-year" id="card-year" data-type="year"></div>
+                <div class="source-card" id="card-year" data-type="year"></div>
               </div>
               <div class="cal-slot-item">
                 <span class="slot-label-text">月份：</span>
-                <div class="source-card card-month" id="card-month" data-type="month"></div>
+                <div class="source-card" id="card-month" data-type="month"></div>
               </div>
             </div>
 
@@ -51,28 +391,26 @@
 
         <!-- 下半部：句子與心情互動區 -->
         <section class="bottom-section">
-          <!-- 句子填空列 -->
           <div class="sentence-box">
             <div class="sentence-guide" id="sentence-guide-txt">
               🗣️ 請把月曆上的字卡拖進句子空格裡，完成後點擊字詞觀察月曆發光的位置：
             </div>
             <div class="sentence-row">
               <span class="sentence-prefix">今天是</span>
-              <div class="sentence-slot slot-year" id="target-year" data-type="year">____年</div>
-              <div class="sentence-slot slot-month" id="target-month" data-type="month">____月</div>
-              <div class="sentence-slot slot-day" id="target-day" data-type="day">____日</div>
-              <div class="sentence-slot slot-weekday" id="target-weekday" data-type="weekday">星期____</div>
+              <div class="sentence-slot" id="target-year" data-type="year">____年</div>
+              <div class="sentence-slot" id="target-month" data-type="month">____月</div>
+              <div class="sentence-slot" id="target-day" data-type="day">____日</div>
+              <div class="sentence-slot" id="target-weekday" data-type="weekday">星期____</div>
             </div>
           </div>
 
-          <!-- 心情互動區 -->
           <div class="mood-box hidden" id="mood-section">
             <div class="mood-question" id="mood-prompt-title">💖 今天的心情怎麼樣？請點選下方的心情卡片：</div>
             <div class="mood-deck" id="mood-deck"></div>
           </div>
         </section>
       </main>
-      
+
     </div>
   </div>
 
