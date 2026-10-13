@@ -265,6 +265,11 @@ function checkDateStepComplete() {
     moodSection.classList.remove('hidden');
     renderCalendarPlate();
     renderMoodDeck();
+
+    // ✅ 新增：在 iPhone 等手機螢幕上自動平滑滾動至心情選取區
+    setTimeout(() => {
+      moodSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 120);
   }
 }
 
