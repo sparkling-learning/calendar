@@ -1,394 +1,420 @@
-/**
- * 認識月曆：看月曆讀句子與心情
- * 完整前端互動腳本 (含自動螢幕縮放與拖曳修正)
- */
-
-// ===============================
-// 1. 全域變數與當前遊戲狀態
-// ===============================
-let currentScale = 1; // 記錄當前畫面縮放倍率
-let currentMode = 'easy'; // 'easy' 或 'hard'
-
-// 題目預設資料 (可擴充更多日期題目)
-const gameData = {
-  year: 2026,
-  month: 10,
-  day: 13,
-  weekday: '二',
-  weekdayFull: '星期二'
-};
-
-const filledSlots = {
-  year: false,
-  month: false,
-  day: false,
-  weekday: false
-};
-
-const moodList = [
-  { emoji: '😄', label: '開心' },
-  { emoji: '☀️', label: '平靜' },
-  { emoji: '🤩', label: '興奮' },
-  { emoji: '🥱', label: '疲倦' },
-  { emoji: '😢', label: '難過' }
-];
-
-// ===============================
-// 2. 螢幕等比例自適應縮放 (核心函式)
-// ===============================
-function fitGameToScreen() {
-  const container = document.getElementById('game-container');
-  if (!container) return;
-
-  const baseWidth = 1200;  // 基準寬度
-  const baseHeight = 750;  // 基準高度
-
-  const windowWidth = window.innerWidth;
-  const windowHeight = window.innerHeight;
-
-  const scaleX = windowWidth / baseWidth;
-  const scaleY = windowHeight / baseHeight;
-  currentScale = Math.min(scaleX, scaleY);
-
-  container.style.transform = `scale(${currentScale})`;
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Microsoft JhengHei", sans-serif;
 }
 
-// ===============================
-// 3. 月曆生成邏輯
-// ===============================
-function initCalendar() {
-  const { year, month, day } = gameData;
+:root {
+  --c-year-bg: #e1f5fe;
+  --c-year-border: #0288d1;
+  --c-year-txt: #01579b;
 
-  // 填入頂部年、月字卡
-  const yearCard = document.getElementById('card-year');
-  const monthCard = document.getElementById('card-month');
-  
-  if (yearCard) {
-    yearCard.textContent = `${year}年`;
-    yearCard.setAttribute('draggable', 'true');
-    yearCard.dataset.value = `${year}年`;
-    setupCardInteractions(yearCard, 'year');
-  }
+  --c-month-bg: #e8f5e9;
+  --c-month-border: #388e3c;
+  --c-month-txt: #1b5e20;
 
-  if (monthCard) {
-    monthCard.textContent = `${month}月`;
-    monthCard.setAttribute('draggable', 'true');
-    monthCard.dataset.value = `${month}月`;
-    setupCardInteractions(monthCard, 'month');
-  }
+  --c-day-bg: #fff3e0;
+  --c-day-border: #f57c00;
+  --c-day-txt: #bf360c;
 
-  // 建立月曆格子
-  const calGrid = document.getElementById('cal-grid');
-  if (!calGrid) return;
-  calGrid.innerHTML = '';
-
-  const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
-
-  // 表頭：星期欄位
-  weekdays.forEach(w => {
-    const headCell = document.createElement('div');
-    headCell.className = 'cal-header-cell';
-    headCell.textContent = `週${w}`;
-    headCell.dataset.weekday = w;
-    headCell.id = `header-weekday-${w}`;
-    calGrid.appendChild(headCell);
-  });
-
-  // 計算該月第一天是星期幾 & 總天數
-  const firstDayIndex = new Date(year, month - 1, 1).getDay();
-  const totalDays = new Date(year, month, 0).getDate();
-
-  // 填補月初空白格
-  for (let i = 0; i < firstDayIndex; i++) {
-    const emptyCell = document.createElement('div');
-    emptyCell.className = 'cal-cell empty';
-    calGrid.appendChild(emptyCell);
-  }
-
-  // 填入日期格
-  for (let d = 1; d <= totalDays; d++) {
-    const dayCell = document.createElement('div');
-    dayCell.className = 'cal-cell';
-    dayCell.textContent = d;
-    dayCell.id = `cal-day-${d}`;
-
-    // 如果是目標日期
-    if (d === day) {
-      dayCell.classList.add('target-day-cell');
-      dayCell.setAttribute('draggable', 'true');
-      dayCell.dataset.type = 'day';
-      dayCell.dataset.value = `${d}日`;
-      setupCardInteractions(dayCell, 'day');
-
-      // 進階版：關聯星期字卡
-      const weekdayCell = document.getElementById(`header-weekday-${gameData.weekday}`);
-      if (weekdayCell) {
-        weekdayCell.setAttribute('draggable', 'true');
-        weekdayCell.dataset.type = 'weekday';
-        weekdayCell.dataset.value = `星期${gameData.weekday}`;
-        setupCardInteractions(weekdayCell, 'weekday');
-      }
-    }
-
-    calGrid.appendChild(dayCell);
-  }
+  --c-weekday-bg: #f3e5f5;
+  --c-weekday-border: #7b1fa2;
+  --c-weekday-txt: #4a148c;
 }
 
-// ===============================
-// 4. 拖曳與觸控相容處理 (適應 Scale)
-// ===============================
-let draggedItem = null;
-let touchClone = null;
-
-function setupCardInteractions(element, type) {
-  // 原生 Drag & Drop (桌機滑鼠)
-  element.addEventListener('dragstart', (e) => {
-    draggedItem = { element, type, value: element.dataset.value };
-    e.dataTransfer.setData('text/plain', type);
-    element.classList.add('dragging');
-  });
-
-  element.addEventListener('dragend', () => {
-    element.classList.remove('dragging');
-  });
-
-  // 觸控事件 (iPad 與手機，考慮 Scale 座標運算)
-  element.addEventListener('touchstart', (e) => {
-    const touch = e.touches[0];
-    draggedItem = { element, type, value: element.dataset.value };
-
-    // 建立跟隨手指移動的浮動鏡像
-    touchClone = element.cloneNode(true);
-    touchClone.classList.add('touch-dragging-clone');
-    touchClone.style.position = 'fixed';
-    touchClone.style.left = `${touch.clientX - 30}px`;
-    touchClone.style.top = `${touch.clientY - 30}px`;
-    touchClone.style.zIndex = '9999';
-    touchClone.style.pointerEvents = 'none';
-    touchClone.style.opacity = '0.85';
-    document.body.appendChild(touchClone);
-  }, { passive: false });
-
-  element.addEventListener('touchmove', (e) => {
-    if (!touchClone) return;
-    const touch = e.touches[0];
-    touchClone.style.left = `${touch.clientX - 30}px`;
-    touchClone.style.top = `${touch.clientY - 30}px`;
-    e.preventDefault(); // 防止拖拉時螢幕滾動
-  }, { passive: false });
-
-  element.addEventListener('touchend', (e) => {
-    if (touchClone) {
-      touchClone.remove();
-      touchClone = null;
-    }
-    const touch = e.changedTouches[0];
-    // 找出釋放點下方的元素
-    const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
-    const dropSlot = targetElement ? targetElement.closest('.sentence-slot') : null;
-
-    if (dropSlot && draggedItem) {
-      handleDrop(dropSlot, draggedItem);
-    }
-    draggedItem = null;
-  });
+body {
+  background-color: #dbe4ee;
+  color: #2c3e50;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  touch-action: manipulation;
 }
 
-// 句子空格的放置區監聽
-function initDropSlots() {
-  const slots = document.querySelectorAll('.sentence-slot');
-  slots.forEach(slot => {
-    slot.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      slot.classList.add('slot-hover');
-    });
-
-    slot.addEventListener('dragleave', () => {
-      slot.classList.remove('slot-hover');
-    });
-
-    slot.addEventListener('drop', (e) => {
-      e.preventDefault();
-      slot.classList.remove('slot-hover');
-      if (draggedItem) {
-        handleDrop(slot, draggedItem);
-      }
-    });
-
-    // 點擊已填入字詞，可觸發月曆高亮觀察
-    slot.addEventListener('click', () => {
-      const slotType = slot.dataset.type;
-      highlightCalendarItem(slotType);
-    });
-  });
+/* iPad 橫向專用主容器 */
+.game-container {
+  width: 100vw;
+  height: 100vh;
+  max-width: 1240px;
+  max-height: 840px;
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-function handleDrop(slot, item) {
-  const slotType = slot.dataset.type;
-  const feedback = document.getElementById('feedback-banner');
-
-  if (slotType === item.type) {
-    slot.textContent = item.value;
-    slot.classList.add('slot-filled');
-    filledSlots[slotType] = true;
-
-    // 回饋提示
-    feedback.textContent = `太棒了！答對了「${item.value}」！✨`;
-    feedback.style.color = '#2e7d32';
-
-    // 觸發高亮提示
-    highlightCalendarItem(slotType);
-
-    // 檢查是否全數完成
-    checkCompletion();
-  } else {
-    feedback.textContent = `再試試看喔！這張卡片放這裡不太合適～ 🤔`;
-    feedback.style.color = '#d32f2f';
-    slot.classList.add('slot-error');
-    setTimeout(() => slot.classList.remove('slot-error'), 600);
-  }
+/* 頂部列 */
+.top-bar {
+  height: 58px;
+  background: #f8fafc;
+  border-bottom: 2px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
 }
 
-// ===============================
-// 5. 月曆發光聯動效果
-// ===============================
-function highlightCalendarItem(type) {
-  // 移除所有先前的發光樣式
-  document.querySelectorAll('.glow-focus').forEach(el => el.classList.remove('glow-focus'));
-
-  if (type === 'year') {
-    const el = document.getElementById('card-year');
-    if (el) el.classList.add('glow-focus');
-  } else if (type === 'month') {
-    const el = document.getElementById('card-month');
-    if (el) el.classList.add('glow-focus');
-  } else if (type === 'day') {
-    const el = document.getElementById(`cal-day-${gameData.day}`);
-    if (el) el.classList.add('glow-focus');
-  } else if (type === 'weekday') {
-    const el = document.getElementById(`header-weekday-${gameData.weekday}`);
-    if (el) el.classList.add('glow-focus');
-  }
+.header-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-// 檢查所有空格是否填寫完成
-function checkCompletion() {
-  const isComplete = currentMode === 'easy'
-    ? (filledSlots.year && filledSlots.month && filledSlots.day)
-    : (filledSlots.year && filledSlots.month && filledSlots.day && filledSlots.weekday);
+.header-icon { font-size: 1.4rem; }
+.header-title { font-size: 1.15rem; color: #1e293b; }
 
-  if (isComplete) {
-    const feedback = document.getElementById('feedback-banner');
-    feedback.textContent = '🌟 恭喜你完成整個句子！現在選擇你今天的心情吧！';
-    feedback.style.color = '#e65100';
-
-    // 顯示心情選擇區
-    const moodSection = document.getElementById('mood-section');
-    if (moodSection) {
-      moodSection.classList.remove('hidden');
-    }
-  }
+.feedback-banner {
+  font-size: 1.05rem;
+  font-weight: bold;
+  padding: 5px 18px;
+  border-radius: 18px;
+  background: #e2e8f0;
+  color: #334155;
+  transition: all 0.2s ease;
 }
 
-// ===============================
-// 6. 心情互動區初始化
-// ===============================
-function initMoodSection() {
-  const moodDeck = document.getElementById('mood-deck');
-  if (!moodDeck) return;
-  moodDeck.innerHTML = '';
-
-  moodList.forEach(m => {
-    const card = document.createElement('button');
-    card.className = 'mood-card';
-    card.innerHTML = `<span class="mood-emoji">${m.emoji}</span><span class="mood-name">${m.label}</span>`;
-    card.addEventListener('click', () => {
-      document.querySelectorAll('.mood-card').forEach(c => c.classList.remove('selected'));
-      card.classList.add('selected');
-
-      const feedback = document.getElementById('feedback-banner');
-      feedback.textContent = `收到！今天的心情是「${m.label}」${m.emoji}，非常棒的學習！🎉`;
-      feedback.style.color = '#1565c0';
-    });
-    moodDeck.appendChild(card);
-  });
+.feedback-banner.try-again {
+  background: #ffebee;
+  color: #d32f2f;
+  border: 1.5px solid #ffcdd2;
 }
 
-// ===============================
-// 7. 難度切換與重設
-// ===============================
-function setupButtons() {
-  const btnEasy = document.getElementById('btn-mode-easy');
-  const btnHard = document.getElementById('btn-mode-hard');
-  const btnRestart = document.getElementById('btn-restart');
-  const targetWeekdaySlot = document.getElementById('target-weekday');
-
-  btnEasy.addEventListener('click', () => {
-    currentMode = 'easy';
-    btnEasy.classList.add('active');
-    btnHard.classList.remove('active');
-    if (targetWeekdaySlot) targetWeekdaySlot.style.display = 'none'; // 初階隱藏星期格
-    restartGame();
-  });
-
-  btnHard.addEventListener('click', () => {
-    currentMode = 'hard';
-    btnHard.classList.add('active');
-    btnEasy.classList.remove('active');
-    if (targetWeekdaySlot) targetWeekdaySlot.style.display = 'flex'; // 進階顯示星期格
-    restartGame();
-  });
-
-  btnRestart.addEventListener('click', restartGame);
+.feedback-banner.step-correct {
+  background: #e8f5e9;
+  color: #2e7d32;
+  border: 1.5px solid #c8e6c9;
 }
 
-function restartGame() {
-  // 重設填入狀態
-  filledSlots.year = false;
-  filledSlots.month = false;
-  filledSlots.day = false;
-  filledSlots.weekday = false;
-
-  // 重設句子文字
-  document.getElementById('target-year').textContent = '____年';
-  document.getElementById('target-month').textContent = '____月';
-  document.getElementById('target-day').textContent = '____日';
-  document.getElementById('target-weekday').textContent = '星期____';
-
-  document.querySelectorAll('.sentence-slot').forEach(s => s.classList.remove('slot-filled'));
-  document.querySelectorAll('.glow-focus').forEach(el => el.classList.remove('glow-focus'));
-
-  // 隱藏心情區
-  const moodSection = document.getElementById('mood-section');
-  if (moodSection) moodSection.classList.add('hidden');
-
-  // 回復預設橫幅文字
-  const feedback = document.getElementById('feedback-banner');
-  feedback.textContent = '請在月曆中找出正確卡片，拉到句子裡！';
-  feedback.style.color = '';
-
-  initCalendar();
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-// ===============================
-// 8. 程式啟動入口
-// ===============================
-window.addEventListener('DOMContentLoaded', () => {
-  fitGameToScreen();
-  initCalendar();
-  initDropSlots();
-  initMoodSection();
-  setupButtons();
+.mode-switch-wrap {
+  display: flex;
+  background: #e2e8f0;
+  border-radius: 12px;
+  padding: 3px;
+}
 
-  // 根據預設模式更新 UI
-  const targetWeekdaySlot = document.getElementById('target-weekday');
-  if (currentMode === 'easy' && targetWeekdaySlot) {
-    targetWeekdaySlot.style.display = 'none';
-  }
-});
+.btn-mode {
+  border: none;
+  background: transparent;
+  padding: 5px 12px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: #64748b;
+  cursor: pointer;
+}
 
-// 視窗變更與旋轉監聽
-window.addEventListener('resize', fitGameToScreen);
-window.addEventListener('orientationchange', () => {
-  setTimeout(fitGameToScreen, 200);
-});
+.btn-mode.active {
+  background: #0288d1;
+  color: #ffffff;
+}
+
+.btn-restart-top {
+  background: #22c55e;
+  color: white;
+  border: none;
+  font-size: 0.95rem;
+  font-weight: bold;
+  padding: 6px 14px;
+  border-radius: 14px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(34, 197, 94, 0.3);
+}
+
+.btn-restart-top:active { transform: scale(0.95); }
+
+/* 主內容區域 */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 16px;
+  gap: 10px;
+  height: calc(100% - 58px);
+}
+
+/* 放大月曆 */
+.calendar-section {
+  flex: 2.8;
+  background: #fdfefe;
+  border: 2px dashed #cbd5e1;
+  border-radius: 14px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.calendar-plate {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.cal-top-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 32px;
+}
+
+.cal-slot-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.slot-label-text {
+  font-size: 1.15rem;
+  font-weight: bold;
+  color: #64748b;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  flex: 1;
+  margin-top: 4px;
+}
+
+.grid-cell {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  color: #64748b;
+  min-height: 36px;
+  transition: all 0.2s;
+}
+
+.grid-cell.week-header {
+  background: #f1f5f9;
+  font-weight: bold;
+  color: #475569;
+  min-height: 28px;
+}
+
+/* 月曆待選字卡 */
+.source-card {
+  min-width: 90px;
+  min-height: 44px;
+  border: 2.5px solid #94a3b8;
+  background: #ffffff;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #1e293b;
+  cursor: grab;
+  touch-action: none;
+  padding: 2px 10px;
+  transition: all 0.2s ease;
+}
+
+.source-card.card-weekday, .source-card.card-day {
+  min-width: unset;
+  width: 100%;
+  height: 100%;
+}
+
+.easy-mode .card-year { background: var(--c-year-bg); border-color: var(--c-year-border); color: var(--c-year-txt); }
+.easy-mode .card-month { background: var(--c-month-bg); border-color: var(--c-month-border); color: var(--c-month-txt); }
+.easy-mode .card-day { background: var(--c-day-bg); border-color: var(--c-day-border); color: var(--c-day-txt); }
+.easy-mode .card-weekday { background: var(--c-weekday-bg); border-color: var(--c-weekday-border); color: var(--c-weekday-txt); }
+
+.source-card:active, .source-card.dragging {
+  cursor: grabbing;
+  transform: scale(1.08);
+  opacity: 0.9;
+}
+
+.source-card.selected-tap { outline: 3px solid #ff9800; }
+.source-card.placed { opacity: 0.25; pointer-events: none; border-style: dashed; }
+
+/* 當天格子呈現心情 */
+.grid-cell.today-slot {
+  border: 2.5px solid #ff9800;
+  background: #fff8e1;
+  font-weight: bold;
+  color: #d84315;
+  flex-direction: column;
+}
+
+.grid-cell.today-slot.mood-filled {
+  border: 3px solid #4caf50;
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+/* 高強度發光閃爍 (Pulse Flash) */
+.flash-focus {
+  animation: pulseSlotHighlight 0.6s infinite alternate ease-in-out !important;
+  opacity: 1 !important;
+  z-index: 100 !important;
+  box-shadow: 0 0 22px #ff6d00, 0 0 35px #ffa000 !important;
+  border: 3.5px solid #ff6d00 !important;
+  background-color: #fff9c4 !important;
+  transform: scale(1.12) !important;
+}
+
+@keyframes pulseSlotHighlight {
+  0% { transform: scale(1.04); box-shadow: 0 0 14px #ff9800; }
+  100% { transform: scale(1.15); box-shadow: 0 0 28px #ff6d00, 0 0 40px #ffb300; }
+}
+
+/* 下方區域 */
+.bottom-section {
+  flex: 2.2;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 句子區域 (放大25%) */
+.sentence-box {
+  background: #fffde7;
+  border: 2.5px solid #fff59d;
+  border-radius: 14px;
+  padding: 10px 14px;
+  text-align: center;
+}
+
+.sentence-guide {
+  font-size: 1.15rem;
+  font-weight: bold;
+  color: #f57f17;
+  margin-bottom: 8px;
+}
+
+.sentence-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.sentence-prefix {
+  font-size: 1.7rem;
+  font-weight: bold;
+  color: #37474f;
+}
+
+.sentence-slot {
+  min-width: 120px;
+  min-height: 58px;
+  border: 2.5px dashed #94a3b8;
+  background: #ffffff;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.45rem;
+  font-weight: bold;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0 10px;
+  transition: transform 0.15s;
+}
+
+.easy-mode #target-year { background: var(--c-year-bg); border-color: var(--c-year-border); }
+.easy-mode #target-month { background: var(--c-month-bg); border-color: var(--c-month-border); }
+.easy-mode #target-day { background: var(--c-day-bg); border-color: var(--c-day-border); }
+.easy-mode #target-weekday { background: var(--c-weekday-bg); border-color: var(--c-weekday-border); }
+
+.sentence-slot.filled {
+  border-style: solid;
+  border-width: 3px;
+  color: #1e293b !important;
+  background: #ffffff !important;
+}
+
+.sentence-slot.filled:active { transform: scale(0.95); }
+
+/* 心情互動區 (放大30%) */
+.mood-box {
+  background: #fdf2e9;
+  border: 2.5px solid #fed7aa;
+  border-radius: 14px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.mood-question {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #c2410c;
+  margin-bottom: 8px;
+}
+
+.mood-deck {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+}
+
+/* 點擊式心情卡片 */
+.mood-card {
+  min-height: 58px;
+  background: #ffffff;
+  border: 2.5px solid #fdba74;
+  border-radius: 14px;
+  padding: 6px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.38rem;
+  font-weight: bold;
+  color: #334155;
+  cursor: pointer;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.06);
+  transition: all 0.25s ease;
+}
+
+.mood-card .mood-emoji { font-size: 1.8rem; }
+.mood-card:active { transform: scale(0.95); }
+
+/* 點選後的狀態：被選中的卡片高亮放大 */
+.mood-card.selected-active {
+  border: 3.5px solid #4caf50;
+  background: #e8f5e9;
+  color: #1b5e20;
+  transform: scale(1.08);
+  box-shadow: 0 6px 16px rgba(76, 175, 80, 0.3);
+}
+
+/* 點選後的狀態：未被選中的卡片變淡灰色 */
+.mood-card.dimmed {
+  opacity: 0.22;
+  filter: grayscale(100%);
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #94a3b8;
+  cursor: pointer;
+  transform: scale(0.96);
+}
+
+.hidden { display: none !important; }
