@@ -390,36 +390,36 @@ body {
   text-align: center;
 }
 
-/* 心情卡片外層容器：改為 2 欄網格排版 */
+/* 心情卡片外層容器：強制 2 欄網格 */
 .mood-deck {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr); /* 固定一行兩張 */
-  gap: 12px;
-  width: 100%;
-  max-width: 420px; /* 限制最大寬度，在 iPad 與手機上看起來比例更均勻 */
-  margin: 0 auto;
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important; /* 一行兩張 */
+  gap: 10px !important;
+  width: 100% !important;
+  max-width: 320px !important; /* 限制寬度讓兩張並排更好看 */
+  margin: 0 auto !important;
 }
 
 /* 點擊式心情卡片 */
 .mood-card {
-  min-height: 52px;
+  min-height: 48px;
   background: #ffffff;
   border: 2.5px solid #fdba74;
   border-radius: 14px;
-  padding: 8px 16px;
-  display: flex;
+  padding: 6px 10px;
+  display: flex !important;
   align-items: center;
-  justify-content: center; /* 讓圖標與文字置中對齊 */
-  gap: 8px;
-  font-size: 1.25rem;
+  justify-content: center;
+  gap: 6px;
+  font-size: 1.15rem;
   font-weight: bold;
   color: #334155;
   cursor: pointer;
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06);
   transition: all 0.25s ease;
-  width: 100%; /* 填滿格位 */
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
-原理說明：
 
 .mood-card .mood-emoji { font-size: 1.5rem; }
 .mood-card:active { transform: scale(0.95); }
